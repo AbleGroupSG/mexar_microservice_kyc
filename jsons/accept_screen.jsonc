@@ -1,0 +1,5 @@
+{
+    "UUID": "f7b1b2b0-4b7b-11e9-8f44-0a7a347b6f6e",
+    "provider": "Glair",
+    "status": "pending" // pending, approved, rejected , verification_result = true
+}
