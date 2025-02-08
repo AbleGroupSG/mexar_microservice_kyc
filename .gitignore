@@ -5,6 +5,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/app/Console/Commands/TCommand.php
 /vendor
 .env
 .env.backup

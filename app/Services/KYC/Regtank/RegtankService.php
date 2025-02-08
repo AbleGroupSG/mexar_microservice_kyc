@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Services\KYC;
+namespace App\Services\KYC\Regtank;
 
 use App\DTO\UserDataDTO;
 use App\Models\ApiRequestLog;
-use App\Services\KYC\Regtank\RegtankAuth;
+use App\Services\KYC\KYCServiceInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -33,7 +33,12 @@ readonly class RegtankService implements KYCServiceInterface
         $response = Http::withToken($accessToken)
             ->post("$url/v2/djkyc/exchange/input", $data);
 
-        ApiRequestLog::saveRequest($data, $response->body(), $this->data->meta->service_provider);
+        ApiRequestLog::saveRequest(
+            $data,
+            $response->body(),
+            $this->data->uuid,
+            $this->data->meta->service_provider,
+        );
 
         $responseData = $response->json() ?? [];
         if(!$response->successful()) {

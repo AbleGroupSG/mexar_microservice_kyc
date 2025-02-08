@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('api_request_logs', function (Blueprint $table) {
-            $table->id();            
+            $table->id();
             $table->string('provider', 32)->index('idx_api_request_logs_provider');
-            $table->uuid('kyc_profile_id')->index('idx_api_request_logs_kyc_profile_id');
-            $table->text('payload'); // request payload? 
+            $table->uuid('kyc_profile_id')->index('idx_api_request_logs_kyc_profile_id')->nullable();
+            $table->text('payload');
             $table->text('response')->nullable();
             $table->timestamps();
 

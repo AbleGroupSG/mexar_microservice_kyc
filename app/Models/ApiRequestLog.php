@@ -3,12 +3,30 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property string provider
+ * @property string kyc_profile_id
+ * @property string payload
+ * @property string response
+ */
 class ApiRequestLog extends Model
 {
-    protected $guarded = ['id'];
+    protected $table = 'api_request_logs';
+    protected $fillable = [
+        'provider',
+        'kyc_profile_id',
+        'payload',
+        'response',
+    ];
 
-    public static function saveRequest(array $data, mixed $response, string $provider): void
+    public function kycProfile(): BelongsTo
+    {
+        return $this->belongsTo(KYCProfile::class, 'kyc_profile_id');
+    }
+
+    public static function saveRequest(array $data, mixed $response, string $kycProfileId, string $provider): void
     {
         if (is_null($response)) {
             $responseToStore = null;
@@ -25,6 +43,7 @@ class ApiRequestLog extends Model
             $responseToStore = $response;
         }
         self::query()->create([
+            'kyc_profile_id' => $kycProfileId,
             'provider' => $provider,
             'payload' => json_encode($data),
             'response' => $responseToStore,

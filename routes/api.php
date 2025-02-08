@@ -10,3 +10,4 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('/screen', [KycScreenerController::class, 'screen'])->middleware(VerifyApiKey::class);
+Route::get('/status/{uuid}', [KycScreenerController::class, 'status'])->middleware(VerifyApiKey::class);

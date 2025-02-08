@@ -12,19 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('kyc_profiles', function (Blueprint $table) {
-            $table->uuid('id')->primary(); // 00000000-0000-0000-0000-000000000000
+            $table->uuid('id')->primary();
 
-            $table->json('profile_data'); // json data
+            $table->json('profile_data')->nullable();
 
             $table->string('provider', 32)->index('idx_kyc_profiles_provider');
-            $table->string('status', 32)->index('idx_kyc_profiles_status'); // approved, pending, rejected                    
-            
+            $table->string('status', 32)->nullable()->index('idx_kyc_profiles_status');
+
             $table->timestamps();
         });
-
-
-
-        
     }
 
     /**
@@ -32,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('entity_kycs');
+        Schema::dropIfExists('kyc_profiles');
     }
 };
