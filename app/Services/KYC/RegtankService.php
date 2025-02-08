@@ -3,10 +3,15 @@
 namespace App\Services\KYC;
 
 use App\DTO\UserDataDTO;
+use App\Models\ApiRequestLog;
 use App\Services\KYC\Regtank\RegtankAuth;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Throwable;
 
 readonly class RegtankService implements KYCServiceInterface
 {
@@ -17,16 +22,29 @@ readonly class RegtankService implements KYCServiceInterface
     }
 
     /**
-     * @throws \Throwable
+     * @throws ConnectionException|Throwable|HttpException
      */
     public function screen(): array
     {
         $accessToken = RegtankAuth::getToken();
         $data = $this->prepareData();
         $url = config('regtank.specific_server_url');
-        return Http::withToken($accessToken)
-            ->post("$url/v2/djkyc/exchange/input", $data)
-            ->json();
+
+        $response = Http::withToken($accessToken)
+            ->post("$url/v2/djkyc/exchange/input", $data);
+
+        ApiRequestLog::saveRequest($data, $response->body(), $this->data->meta->service_provider);
+
+        $responseData = $response->json() ?? [];
+        if(!$response->successful()) {
+
+            Log::error('Unsuccessful request', ['response' => $responseData]);
+            $error = $responseData['error'] ?? 'An error occurred';
+
+            throw new HttpException($response->status(), $error);
+        }
+
+        return $responseData;
     }
 
     private function prepareData():array

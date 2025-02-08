@@ -7,8 +7,10 @@ use App\Enums\KycServiceTypeEnum;
 use App\Http\Requests\ScreenRequest;
 use App\Services\KYC\GlairAIService;
 use App\Services\KYC\RegtankService;
-use Exception;
 use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Http\Client\ConnectionException;
 
 class KycScreenerController extends APIController
 {
@@ -22,13 +24,20 @@ class KycScreenerController extends APIController
             KycServiceTypeEnum::GLAIR_AI => new GlairAIService($data),
         };
 
-//        try {
+        try {
             $response = $service->screen();
+
             return $this->respondWithWrapper($response, 'Screening successful');
-//        } catch (Exception $e) {
-//            return $this->respondWithError([
-//                'error' => $e->getMessage(),
-//            ], $e->getCode(), 'Screening failed');
-//        }
+        } catch (HttpException|ConnectionException $e) {
+
+            return $this->respondWithError([
+                'error' => $e->getMessage(),
+            ], $e->getStatusCode() ?? Response::HTTP_BAD_REQUEST, 'Screening failed');
+        } catch (\Throwable $e) {
+
+            return $this->respondWithError([
+                'error' => 'An internal error happened',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR, 'Screening failed');
+        }
     }
 }

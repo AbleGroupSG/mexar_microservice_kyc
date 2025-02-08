@@ -14,10 +14,9 @@ return new class extends Migration
         Schema::create('api_request_logs', function (Blueprint $table) {
             $table->id();
             $table->string('provider', 32)->index('idx_api_request_logs_provider');
-            $table->string('method', 16)->index('idx_api_request_logs_method');
 
-            $table->text('payload')->index('idx_api_request_logs_payload');
-            $table->text('response')->nullable()->index('idx_api_request_logs_response');
+            $table->text('payload');
+            $table->text('response')->nullable();
             $table->timestamps();
         });
     }
