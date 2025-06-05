@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Http\Requests;
+
+use App\Enums\KycServiceTypeEnumV2;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class KycRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'document_type' => ['required', Rule::enum(KycServiceTypeEnumV2::class)],
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'options' => 'array',
+            'options.enhance' => 'nullable|boolean',
+            'options.lang' => 'nullable|string',
+            'options.detect_orientation' => 'nullable|boolean',
+        ];
+    }
+}

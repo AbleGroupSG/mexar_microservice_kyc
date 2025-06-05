@@ -19,39 +19,35 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 class GlairAIService implements KYCServiceInterface
 {
     private GlarAICredentialsDTO $credentials;
-    private UserDataDTO $data;
 
 
     /**
      * @throws Exception
      */
-    public function __construct(
-        UserDataDTO $data
-    )
+    public function __construct()
     {
         $this->credentials = $this->getCredentials();
-        $this->data = $data;
     }
 
     /**
      * @throws Exception
      */
-    public function screen(): array
+    public function screen(UserDataDTO $userDataDTO): array
     {
-        $profile = $this->createProfile();
-        $data = $this->prepareData();
+        $profile = $this->createProfile($userDataDTO);
+        $data = $this->prepareData($userDataDTO);
         $this->validateData($data);
-        $status = $this->basicVerification($profile, $data);
+        $status = $this->basicVerification($profile, $userDataDTO, $data);
 
-        return $this->prepareResponse($status);
+        return $this->prepareResponse($userDataDTO, $status);
     }
 
-    private function prepareData(): array
+    private function prepareData(UserDataDTO $userDataDTO): array
     {
         return [
-            'nik' => $this->data->identification->id_number,
-            'name' => $this->data->personal_info->first_name . ' ' . $this->data->personal_info->last_name,
-            'date_of_birth' => Carbon::make($this->data->personal_info->date_of_birth)->format('d-m-Y'),
+            'nik' => $userDataDTO->identification->id_number,
+            'name' => $userDataDTO->personal_info->first_name . ' ' . $userDataDTO->personal_info->last_name,
+            'date_of_birth' => Carbon::make($userDataDTO->personal_info->date_of_birth)->format('d-m-Y'),
         ];
     }
 
@@ -96,7 +92,7 @@ class GlairAIService implements KYCServiceInterface
     /**
      * @throws ConnectionException|HttpException
      */
-    public function basicVerification(KYCProfile $profile, array $data): ?KycStatuseEnum
+    public function basicVerification(KYCProfile $profile, UserDataDTO $userDataDTO, array $data): ?KycStatuseEnum
     {
         $url = $this->credentials->url . '/identity/v1/verification';
 
@@ -110,8 +106,8 @@ class GlairAIService implements KYCServiceInterface
         ApiRequestLog::saveRequest(
             $data,
             $response->body(),
-            $this->data->uuid,
-            $this->data->meta->service_provider,
+            $userDataDTO->uuid,
+            $userDataDTO->meta->service_provider,
         );
 
         $responseData = $response->json() ?? [];
@@ -131,24 +127,118 @@ class GlairAIService implements KYCServiceInterface
         return $profile->status;
     }
 
-    private function createProfile():KYCProfile
+    private function createProfile(UserDataDTO $userDataDTO):KYCProfile
     {
         $profile = new KYCProfile();
-        $profile->id = $this->data->uuid;
-        $profile->profile_data = $this->data->toJson();
-        $profile->provider = $this->data->meta->service_provider;
+        $profile->id = $userDataDTO->uuid;
+        $profile->profile_data = $userDataDTO->toJson();
+        $profile->provider = $userDataDTO->meta->service_provider;
         $profile->save();
 
         return $profile;
     }
 
-    private function prepareResponse(?KycStatuseEnum $status): array
+    private function prepareResponse(UserDataDTO $userDataDTO, ?KycStatuseEnum $status): array
     {
         return [
-            'uuid' => $this->data->uuid,
-            'provider' => $this->data->meta->service_provider,
+            'uuid' => $userDataDTO->uuid,
+            'provider' => $userDataDTO->meta->service_provider,
             'response' => $status->value,
         ];
+    }
+
+    /**
+     * @throws ConnectionException
+     * @throws Exception
+     */
+    public function readKTP(string $imagePath): KYCResponse
+    {
+        $url = $this->credentials->url . '/ocr/v1/ktp';
+        $response = Http::withHeaders([
+            'x-api-key' => $this->credentials->apiKey,
+        ])
+            ->withBasicAuth($this->credentials->username, $this->credentials->password)
+            ->attach('image', file_get_contents($imagePath), basename($imagePath))
+            ->timeout(300)
+            ->post($url);
+
+        if ($response->failed()) {
+            $errorMessage = $response->body();
+            throw new \Exception(
+                'Check request ' . ' ' . $url . ' failed! Status: ' . $response->status() . '. Error: ' . $errorMessage,
+                $response->status()
+            );
+        }
+
+        if(empty($response->body()))
+            throw new \Exception('Empty response from server', 500);
+
+        if($read = $response->json()['read'] ?? null){
+            return KYCResponse::make($read);
+        }else{
+            throw new \Exception('Failed to read image', 500);
+        }
+    }
+
+    public function formatKtpResult(array $data): array
+    {
+        return [
+            'fields' => [
+                'national_id_number' => $data['nik']['value'] ?? null,
+                'full_name' => $data['name']['value'] ?? null,
+                'place_of_birth' => $data['birthPlace']['value'] ?? null,
+                'date_of_birth' => $this->formatDate($data['birthDate']['value'] ?? null),
+                'gender' => $this->mapGender($data['gender']['value'] ?? null),
+                'address' => $data['address']['value'] ?? null,
+                'rt_rw' => $data['neighborhoodAssociation']['value'] ?? null,
+                'village' => $data['subdistrictVillage']['value'] ?? null,
+                'district' => $data['district']['value'] ?? null,
+                'religion' => strtolower($data['religion']['value'] ?? ''),
+                'marital_status' => $this->mapMaritalStatus($data['maritalStatus']['value'] ?? null),
+                'occupation' => strtolower($data['occupation']['value'] ?? ''),
+                'citizenship' => $this->mapCitizenship($data['nationality']['value'] ?? null),
+                'valid_until' => $this->mapValidUntil($data['validUntil']['value'] ?? null),
+            ]
+        ];
+    }
+
+    private function formatDate(?string $date): ?string
+    {
+        if (!$date) return null;
+        $parsed = Carbon::parse($date);
+        return $parsed?->format('Y-m-d');
+    }
+
+    private function mapGender(?string $value): ?string
+    {
+        return match (strtolower($value)) {
+            'laki-laki' => 'male',
+            'perempuan' => 'female',
+            default => null,
+        };
+    }
+
+    private function mapMaritalStatus(?string $value): ?string
+    {
+        return match (strtolower($value)) {
+            'kawin' => 'married',
+            'belum kawin' => 'single',
+            default => strtolower($value),
+        };
+    }
+
+    private function mapCitizenship(?string $value): ?string
+    {
+        return match (strtoupper($value)) {
+            'WNI' => 'indonesian',
+            'WNA' => 'foreign',
+            default => strtolower($value),
+        };
+    }
+
+    private function mapValidUntil(?string $value): ?string
+    {
+        return strtolower($value) === 'seumur hidup' ? 'lifetime' : $value;
     }
 
 }

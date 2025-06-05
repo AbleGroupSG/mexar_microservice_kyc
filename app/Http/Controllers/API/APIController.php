@@ -280,12 +280,13 @@ abstract class APIController extends Controller
      * @param int $statusCode
      * @return JsonResponse
      */
-    protected function respondWithError(array $errors, int $statusCode = 200, string $message = '')
+    protected function respondWithError(array $errors, int $statusCode = 200, string $message = '', $request_id = null)
     {
         $responseArray = [
             'meta'  =>  [
                 'code'  =>  $statusCode,
                 'message'   =>  $message ?? "There's an error, please read the errors key for more details",
+                'request_id' => $request_id,
             ],
             'errors' => $errors,
         ];
@@ -317,12 +318,13 @@ abstract class APIController extends Controller
      * @param string $message
      * @return array
      */
-    protected function buildRespondDataWrapper(int $code = 200, string $message = 'ok')
+    protected function buildRespondDataWrapper(int $code = 200, string $message = 'ok', $request_id = null): array
     {
         return [
             'meta'  =>  [
                 'code'  =>  $code,
                 'message'   =>  $message,
+                'request_id' => $request_id
             ],
         ];
     }
@@ -336,9 +338,9 @@ abstract class APIController extends Controller
      * @param array $headers
      * @return JsonResponse
      */
-    protected function respondWithWrapper(array|null $data, string $message = '', int $statusCode = 200, array $headers = [])
+    protected function respondWithWrapper(array|null $data, string $message = '', int $statusCode = 200, array $headers = [], $request_id = null): JsonResponse
     {
-        $wrapper = $this->buildRespondDataWrapper($statusCode, $message);
+        $wrapper = $this->buildRespondDataWrapper($statusCode, $message, $request_id);
         if (isset($data)) {
             $wrapper['data'] = $data;
         }

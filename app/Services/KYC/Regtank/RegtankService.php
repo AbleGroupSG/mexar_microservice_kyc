@@ -15,19 +15,13 @@ use Throwable;
 
 readonly class RegtankService implements KYCServiceInterface
 {
-    public function __construct(
-        private UserDataDTO $data
-    )
-    {
-    }
-
     /**
      * @throws ConnectionException|Throwable|HttpException
      */
-    public function screen(): array
+    public function screen(UserDataDTO $userDataDTO): array
     {
         $accessToken = RegtankAuth::getToken();
-        $data = $this->prepareData();
+        $data = $this->prepareData($userDataDTO);
         $url = config('regtank.specific_server_url');
 
         $response = Http::withToken($accessToken)
@@ -36,8 +30,8 @@ readonly class RegtankService implements KYCServiceInterface
         ApiRequestLog::saveRequest(
             $data,
             $response->body(),
-            $this->data->uuid,
-            $this->data->meta->service_provider,
+            $userDataDTO->uuid,
+            $userDataDTO->meta->service_provider,
         );
 
         $responseData = $response->json() ?? [];
@@ -52,40 +46,40 @@ readonly class RegtankService implements KYCServiceInterface
         return $responseData;
     }
 
-    private function prepareData():array
+    private function prepareData(UserDataDTO $userDataDTO):array
     {
-        $dateOfBirth = $this->data->personal_info->date_of_birth
-            ? Carbon::parse($this->data->personal_info->date_of_birth)
+        $dateOfBirth = $userDataDTO->personal_info->date_of_birth
+            ? Carbon::parse($userDataDTO->personal_info->date_of_birth)
             : null;
 
-        [$address1, $address2] = $this->prepareAddress();
+        [$address1, $address2] = $this->prepareAddress($userDataDTO);
 
         $assignee = config('regtank.assignee');
         return [
-            'name' => $this->data->personal_info->first_name . ' ' . $this->data->personal_info->last_name,
+            'name' => $userDataDTO->personal_info->first_name . ' ' . $userDataDTO->personal_info->last_name,
             'profileNotes' => true,
-            'referenceId' => $this->data->meta->reference_id,
+            'referenceId' => $userDataDTO->meta->reference_id,
             'occupationTitle' => true,
             'dateOfBirth' => $dateOfBirth?->day,
             'monthOfBirth' => $dateOfBirth?->month,
             'yearOfBirth' => $dateOfBirth?->year,
             'strictDateMatch' => true,
             'assignee' => $assignee,
-            'email' => $this->data->contact->email,
-            'phone' => $this->data->contact->phone,
+            'email' => $userDataDTO->contact->email,
+            'phone' => $userDataDTO->contact->phone,
             'address1' => $address1,
             'address2' => $address2,
-            'gender' => Str::upper($this->data->personal_info->gender),
-            'nationality' => $this->data->personal_info->nationality,
-            'idIssuingCountry' => $this->data->identification->issuing_country,
+            'gender' => Str::upper($userDataDTO->personal_info->gender),
+            'nationality' => $userDataDTO->personal_info->nationality,
+            'idIssuingCountry' => $userDataDTO->identification->issuing_country,
             'enableOnGoingMonitoring' => true,
             'enableReScreening' => true,
         ];
     }
 
-    private function prepareAddress(): array
+    private function prepareAddress(UserDataDTO $userDataDTO): array
     {
-        $addressData = $this->data->address;
+        $addressData = $userDataDTO->address;
         $fullAddress = "$addressData->street, $addressData->city, $addressData->state, $addressData->postal_code, $addressData->country";
 
         $address1 = Str::limit($fullAddress, 255, '');

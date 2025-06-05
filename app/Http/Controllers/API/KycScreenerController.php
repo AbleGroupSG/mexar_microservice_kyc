@@ -25,13 +25,12 @@ class KycScreenerController extends APIController
         $serviceProvider = $data->meta->service_provider;
 
         $service = match(KycServiceTypeEnum::from($serviceProvider)) {
-            KycServiceTypeEnum::REGTANK => new RegtankService($data),
-            KycServiceTypeEnum::GLAIR_AI => new GlairAIService($data),
+            KycServiceTypeEnum::REGTANK => new RegtankService(),
+            KycServiceTypeEnum::GLAIR_AI => new GlairAIService(),
         };
 
         try {
-            $response = $service->screen();
-
+            $response = $service->screen($data);
             return $this->respondWithWrapper($response, 'Screening successful');
         } catch (HttpException|ConnectionException $e) {
 
