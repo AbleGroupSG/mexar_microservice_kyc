@@ -32,7 +32,8 @@ class KycController extends APIController
                 return $this->respondWithError(
                     errors: ['error' => 'KTP reading failed'],
                     statusCode: Response::HTTP_SERVICE_UNAVAILABLE,
-                    message: 'KTP reading failed'
+                    message: 'KTP reading failed',
+                    request_id: $uuid,
                 );
             }
         }
@@ -40,10 +41,12 @@ class KycController extends APIController
         if($type === KycServiceTypeEnumV2::PASSPORT){
             //TODO ...
         }
+
         return $this->respondWithError(
             errors: ['uuid' => $uuid,'error' => 'Unsupported document type',],
             statusCode: Response::HTTP_BAD_REQUEST,
-            message: 'Unsupported document type'
+            message: 'Unsupported document type',
+            request_id: $uuid,
         );
     }
 
