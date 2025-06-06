@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Enums\KycServiceTypeEnumV2;
+use App\Enums\OcrServiceTypeEnum;
 use App\Http\Requests\KycRequest;
 use App\Services\KYC\GlairAI\GlairAIService;
 use Illuminate\Http\Client\ConnectionException;
@@ -15,17 +15,17 @@ use Throwable;
 
 class KycController extends APIController
 {
-    public function kyc(KycRequest $request): JsonResponse
+    public function ocr(KycRequest $request): JsonResponse
     {
         $data = $request->validated();
         $uuid = Str::uuid();
         $this->logRequest($request, $uuid);
 
-        $type = KycServiceTypeEnumV2::from($data['document_type']);
+        $type = OcrServiceTypeEnum::from($data['document_type']);
 
-        if($type === KycServiceTypeEnumV2::KTP){
+        if($type === OcrServiceTypeEnum::KTP){
             try {
-                $result = $this->handleKTP($request);
+                $result = $this->handleKTP($request, $uuid);
                 return $this->respondWithWrapper(data: $result, request_id: $uuid);
             }catch (Throwable $e) {
                 Log::error('KTP reading failed', ['uuid' => $uuid, 'error' => $e->getMessage()]);
@@ -38,8 +38,12 @@ class KycController extends APIController
             }
         }
 
-        if($type === KycServiceTypeEnumV2::PASSPORT){
-            //TODO ...
+        if($type === OcrServiceTypeEnum::PASSPORT){
+            $result = $this->handlePassport($request, $uuid);
+            return $this->respondWithWrapper(
+                data: $result,
+                request_id: $uuid
+            );
         }
 
         return $this->respondWithError(
@@ -54,12 +58,25 @@ class KycController extends APIController
     /**
      * @throws ConnectionException
      */
-    private function handleKTP(KycRequest $request): array
+    private function handleKTP(KycRequest $request, $uuid): array
     {
         $service = new GlairAIService();
         $path = $request->file('image')->store('uploads', 'public');
-        $result =  $service->readKTP(storage_path('app/public/'.$path));
-        return $service->formatKtpResult($result->toArray());
+        $result = $service->readOCR(GlairAIService::KTP_URL, storage_path('app/public/'.$path));
+
+        return $service->formatResult($result->toArray());
+    }
+
+    /**
+     * @throws ConnectionException
+     */
+    private function handlePassport(KycRequest $request, $uuid): array
+    {
+        $service = new GlairAIService();
+        $path = $request->file('image')->store('uploads', 'public');
+        $result = $service->readOCR(GlairAIService::PASSPORT_URL, storage_path('app/public/'.$path));
+
+        return $service->formatResult($result->toArray());
     }
 
     private function logRequest(KycRequest $request, $uuid): void

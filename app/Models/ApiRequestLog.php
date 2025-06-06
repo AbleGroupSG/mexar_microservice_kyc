@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property string provider
- * @property string kyc_profile_id
+ * @property string request_uuid
  * @property string payload
  * @property string response
  */
@@ -16,17 +16,17 @@ class ApiRequestLog extends Model
     protected $table = 'api_request_logs';
     protected $fillable = [
         'provider',
-        'kyc_profile_id',
+        'request_uuid',
         'payload',
         'response',
     ];
 
     public function kycProfile(): BelongsTo
     {
-        return $this->belongsTo(KYCProfile::class, 'kyc_profile_id');
+        return $this->belongsTo(KYCProfile::class, 'request_uuid');
     }
 
-    public static function saveRequest(array $data, mixed $response, string $kycProfileId, string $provider): void
+    public static function saveRequest(array $data, mixed $response, string $request_uuid, string $provider): void
     {
         if (is_null($response)) {
             $responseToStore = null;
@@ -43,7 +43,7 @@ class ApiRequestLog extends Model
             $responseToStore = $response;
         }
         self::query()->create([
-            'kyc_profile_id' => $kycProfileId,
+            'request_uuid' => $request_uuid,
             'provider' => $provider,
             'payload' => json_encode($data),
             'response' => $responseToStore,

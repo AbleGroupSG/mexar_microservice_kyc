@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\KycServiceTypeEnumV2;
+use App\Enums\OcrServiceTypeEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +19,7 @@ class KycRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'document_type' => ['required', Rule::enum(KycServiceTypeEnumV2::class)],
+            'document_type' => ['required', Rule::enum(OcrServiceTypeEnum::class)],
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'options' => 'array',
             'options.enhance' => 'nullable|boolean',

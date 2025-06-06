@@ -18,6 +18,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class GlairAIService implements KYCServiceInterface
 {
+    const PASSPORT_URL = '/ocr/v1/passport';
+    const KTP_URL = '/ocr/v1/ktp';
     private GlarAICredentialsDTO $credentials;
 
 
@@ -151,9 +153,9 @@ class GlairAIService implements KYCServiceInterface
      * @throws ConnectionException
      * @throws Exception
      */
-    public function readKTP(string $imagePath): KYCResponse
+    public function readOCR(string $ocrType, string $imagePath): OCRResponse
     {
-        $url = $this->credentials->url . '/ocr/v1/ktp';
+        $url = $this->credentials->url . $ocrType;
         $response = Http::withHeaders([
             'x-api-key' => $this->credentials->apiKey,
         ])
@@ -174,30 +176,30 @@ class GlairAIService implements KYCServiceInterface
             throw new \Exception('Empty response from server', 500);
 
         if($read = $response->json()['read'] ?? null){
-            return KYCResponse::make($read);
+            return OCRResponse::make($read);
         }else{
             throw new \Exception('Failed to read image', 500);
         }
     }
 
-    public function formatKtpResult(array $data): array
+    public function formatResult(array $data): array
     {
         return [
             'fields' => [
-                'national_id_number' => $data['nik']['value'] ?? null,
-                'full_name' => $data['name']['value'] ?? null,
-                'place_of_birth' => $data['birthPlace']['value'] ?? null,
-                'date_of_birth' => $this->formatDate($data['birthDate']['value'] ?? null),
-                'gender' => $this->mapGender($data['gender']['value'] ?? null),
-                'address' => $data['address']['value'] ?? null,
-                'rt_rw' => $data['neighborhoodAssociation']['value'] ?? null,
-                'village' => $data['subdistrictVillage']['value'] ?? null,
-                'district' => $data['district']['value'] ?? null,
-                'religion' => strtolower($data['religion']['value'] ?? ''),
-                'marital_status' => $this->mapMaritalStatus($data['maritalStatus']['value'] ?? null),
-                'occupation' => strtolower($data['occupation']['value'] ?? ''),
-                'citizenship' => $this->mapCitizenship($data['nationality']['value'] ?? null),
-                'valid_until' => $this->mapValidUntil($data['validUntil']['value'] ?? null),
+                'national_id_number' => $data['nik'] ?? null,
+                'full_name' => $data['name'] ?? null,
+                'place_of_birth' => $data['birthPlace'] ?? null,
+                'date_of_birth' => $this->formatDate($data['birthDate'] ?? null),
+                'gender' => $this->mapGender($data['gender'] ?? null),
+                'address' => $data['address'] ?? null,
+                'rt_rw' => $data['neighborhoodAssociation'] ?? null,
+                'village' => $data['subdistrictVillage'] ?? null,
+                'district' => $data['district'] ?? null,
+                'religion' => strtolower($data['religion'] ?? ''),
+                'marital_status' => $this->mapMaritalStatus($data['maritalStatus'] ?? null),
+                'occupation' => strtolower($data['occupation'] ?? ''),
+                'citizenship' => $this->mapCitizenship($data['nationality'] ?? null),
+                'valid_until' => $this->mapValidUntil($data['validUntil'] ?? null),
             ]
         ];
     }
@@ -212,8 +214,8 @@ class GlairAIService implements KYCServiceInterface
     private function mapGender(?string $value): ?string
     {
         return match (strtolower($value)) {
-            'laki-laki' => 'male',
-            'perempuan' => 'female',
+            'laki-laki', 'm' => 'male',
+            'perempuan', 'f' => 'female',
             default => null,
         };
     }

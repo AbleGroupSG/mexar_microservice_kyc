@@ -14,5 +14,5 @@ Route::post('/screen', [KycScreenerController::class, 'screen'])->middleware(Ver
 Route::get('/status/{uuid}', [KycScreenerController::class, 'status'])->middleware(VerifyApiKey::class);
 
 Route::prefix('v1')->group(function (){
-    Route::post('/kyc', [KycController::class, 'kyc']);
+    Route::post('/ocr', [KycController::class, 'ocr']);
 });

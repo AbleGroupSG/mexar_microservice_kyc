@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum KycServiceTypeEnumV2: string
+enum OcrServiceTypeEnum: string
 {
     case KTP = "ktp";
     case PASSPORT = "passport";
