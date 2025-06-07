@@ -41,6 +41,8 @@ class GlairAIService implements KYCServiceInterface
         $this->validateData($data);
         $status = $this->basicVerification($profile, $userDataDTO, $data);
 
+        //TODO Send data to MEXAR
+
         return $this->prepareResponse($userDataDTO, $status);
     }
 
