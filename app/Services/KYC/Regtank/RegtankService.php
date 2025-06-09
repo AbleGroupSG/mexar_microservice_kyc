@@ -34,6 +34,8 @@ readonly class RegtankService implements KYCServiceInterface
             $userDataDTO->meta->service_provider,
         );
 
+
+
         $responseData = $response->json() ?? [];
         if(!$response->successful()) {
 

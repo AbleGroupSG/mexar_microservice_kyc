@@ -4,6 +4,7 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/oauth/public.pem
 /storage/pail
 /app/Console/Commands/TCommand.php
 /vendor

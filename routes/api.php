@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\KycController;
 use App\Http\Controllers\API\KycScreenerController;
 use App\Http\Middleware\VerifyApiKey;
+use App\Http\Middleware\VerifyJwtMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,5 +15,5 @@ Route::post('/screen', [KycScreenerController::class, 'screen'])->middleware(Ver
 Route::get('/status/{uuid}', [KycScreenerController::class, 'status'])->middleware(VerifyApiKey::class);
 
 Route::prefix('v1')->group(function (){
-    Route::post('/ocr', [KycController::class, 'ocr']);
+    Route::post('/ocr', [KycController::class, 'ocr'])->middleware(VerifyJwtMiddleware::class);
 });

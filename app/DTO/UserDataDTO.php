@@ -12,7 +12,7 @@ class UserDataDTO extends Data
         public IdentificationData $identification,
         public AddressData $address,
         public ContactData $contact,
-        public DocumentsData $documents,
+//        public DocumentsData $documents,
         public MetaData $meta,
     ) {}
 }

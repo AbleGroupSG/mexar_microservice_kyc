@@ -4,6 +4,7 @@ namespace App\Services\KYC\GlairAI;
 
 use App\DTO\GlarAICredentialsDTO;
 use App\DTO\UserDataDTO;
+use App\Enums\KycServiceTypeEnum;
 use App\Enums\KycStatuseEnum;
 use App\Models\ApiRequestLog;
 use App\Models\KYCProfile;
@@ -39,11 +40,33 @@ class GlairAIService implements KYCServiceInterface
         $profile = $this->createProfile($userDataDTO);
         $data = $this->prepareData($userDataDTO);
         $this->validateData($data);
-        $status = $this->basicVerification($profile, $userDataDTO, $data);
+        $response = $this->basicVerification($profile, $userDataDTO, $data);
+        $profile->refresh();
+        $this->sendToMexar($userDataDTO, $profile->status, $response['reason'] ?? null);
 
-        //TODO Send data to MEXAR
+        return $this->prepareResponse($userDataDTO, $profile->status);
+    }
 
-        return $this->prepareResponse($userDataDTO, $status);
+    private function sendToMexar(UserDataDTO $userDataDTO, ?KycStatuseEnum $status, string $error = null): void
+    {
+        $data = [
+            'event' => 'kyc.status.changed',
+            'payload' => [
+                'msa_reference_id' => $userDataDTO->uuid,
+                'provider_reference_id' => $userDataDTO->uuid,
+                'reference_id' => $userDataDTO->uuid,
+                'platform' => KycServiceTypeEnum::GLAIR_AI,
+                'status' => $status,
+                'verified' => $status === KycStatuseEnum::APPROVED,
+                'verified_at' => Carbon::now(),
+                'message' => 'KYC verification process',
+                'review_notes' => 'Document and face match confirmed',
+                'failure_reason' => $error,
+            ],
+        ];
+        // TODO MAKE DELAY
+
+//        return Http::post('https://mexar.com/api/kyc', $data);
     }
 
     private function prepareData(UserDataDTO $userDataDTO): array
@@ -96,7 +119,7 @@ class GlairAIService implements KYCServiceInterface
     /**
      * @throws ConnectionException|HttpException
      */
-    public function basicVerification(KYCProfile $profile, UserDataDTO $userDataDTO, array $data): ?KycStatuseEnum
+    public function basicVerification(KYCProfile $profile, UserDataDTO $userDataDTO, array $data): array
     {
         $url = $this->credentials->url . '/identity/v1/verification';
 
@@ -120,6 +143,8 @@ class GlairAIService implements KYCServiceInterface
             Log::error('Unsuccessful request', ['response' => $responseData]);
             $error = $responseData['error'] ?? 'An error occurred';
 
+            $this->sendToMexar($userDataDTO, KycStatuseEnum::ERROR, $error);
+
             throw new HttpException($response->status(), $error);
         }
 
@@ -128,7 +153,7 @@ class GlairAIService implements KYCServiceInterface
         $profile->status = $status;
         $profile->save();
 
-        return $profile->status;
+        return $responseData;
     }
 
     private function createProfile(UserDataDTO $userDataDTO):KYCProfile
