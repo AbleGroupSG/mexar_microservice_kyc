@@ -6,7 +6,6 @@ use App\DTO\Webhooks\KycDTO;
 use App\Enums\KycStatuseEnum;
 use App\Enums\WebhookTypeEnum;
 use App\Http\Controllers\Controller;
-use App\Models\EntityKyc;
 use App\Models\KYCProfile;
 use App\Models\WebhookLog;
 use Illuminate\Http\JsonResponse;
@@ -27,9 +26,10 @@ class RegtankWebhookController extends Controller
             $profile->save();
 
 
+
             //TODO Send data to MEXAR
         } else {
-            logger()->error('EntityKyc not found', ['identity' => $dto->requestId]);
+            logger()->error('Kyc profile not found', ['provider_reference_id' => $dto->requestId]);
         }
 
         return response()->json(['status' => true], Response::HTTP_OK);
@@ -38,7 +38,7 @@ class RegtankWebhookController extends Controller
     private function resolveStatus(string $status): KycStatuseEnum
     {
         return match ($status) {
-            'Approved' => KycStatuseEnum::APPROVED,
+            'Approved', 'Score Generated' => KycStatuseEnum::APPROVED,
             'Rejected' => KycStatuseEnum::REJECTED,
             default => KycStatuseEnum::ERROR,
         };
