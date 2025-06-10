@@ -221,13 +221,6 @@ class GlairAIService implements KYCServiceInterface
         ];
     }
 
-    private function formatDate(?string $date): ?string
-    {
-        if (!$date) return null;
-        $parsed = Carbon::parse($date);
-        return $parsed?->format('Y-m-d');
-    }
-
     private function mapGender(?string $value): ?string
     {
         return match (strtolower($value)) {
@@ -258,6 +251,25 @@ class GlairAIService implements KYCServiceInterface
     private function mapValidUntil(?string $value): ?string
     {
         return strtolower($value) === 'seumur hidup' ? 'lifetime' : $value;
+    }
+
+    public function formatDate(?string $value): string|null
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        try {
+            $date = Carbon::parse($value);
+            return $date->format('Y-m-d');
+        } catch (\Throwable $e) {
+            Log::warning('safeFormatDate: Failed to parse date', [
+                'input' => $value,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $value;
+        }
     }
 
 }

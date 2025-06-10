@@ -4,57 +4,51 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Lcobucci\JWT\Configuration;
 use Symfony\Component\HttpFoundation\Response;
-use Lcobucci\JWT\Signer\Rsa\Sha256;
+use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
+use Lcobucci\JWT\Signer\Rsa\Sha256;
+use Lcobucci\JWT\Validation\Constraint\SignedWith;
 
 class VerifyJwtMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        $authHeader = $request->header('Authorization');
+        $token = $request->header('Authorization');
 
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
-            return response()->json(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
+        if (!$token || !str_starts_with($token, 'Bearer ')) {
+            return response()->json(['message' => 'Unauthorized: Missing or invalid token format'], 401);
         }
 
-        $token = trim(str_replace('Bearer', '', $authHeader));
-
         try {
-            $publicKeyPath = base_path(config('jwt.public_key_path', 'storage/oauth/public.pem'));
-            if (!file_exists($publicKeyPath)) {
-                return response()->json(['error' => 'Public key not found'], 500);
-            }
+            // Remove 'Bearer ' from token
+            $token = substr($token, 7);
 
+            // Load the public key from storage
+            $publicKeyPath = storage_path('oauth/public.pem');
             $publicKey = InMemory::file($publicKeyPath);
 
+            // Configure JWT validation
             $config = Configuration::forAsymmetricSigner(
                 new Sha256(),
-                InMemory::plainText(''),
+                InMemory::empty(), // We don't need private key for verification
                 $publicKey
             );
 
+            // Parse and validate the token
             $parsedToken = $config->parser()->parse($token);
 
-            if (!$config->validator()->validate($parsedToken, ...$config->validationConstraints())) {
-                return response()->json(['error' => 'Invalid token'], Response::HTTP_UNAUTHORIZED);
-            }
+            // Verify signature
+            $constraint = new SignedWith($config->signer(), $config->verificationKey());
+            $config->validator()->assert($parsedToken, $constraint);
 
-            $claims = $parsedToken->claims();
-            $userId = $claims->get('sub');
+            // Add token claims to request if needed
+            $request->attributes->set('jwt_claims', $parsedToken->claims()->all());
 
-            $request->merge(['jwt_user_id' => $userId]);
 
-        } catch (\Throwable $e) {
-            return response()->json(['error' => 'Token error: ' . $e->getMessage()], Response::HTTP_UNAUTHORIZED);
+            return $next($request);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Unauthorized: Invalid token'], 401);
         }
-
-        return $next($request);
     }
 }
