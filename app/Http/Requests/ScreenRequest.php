@@ -46,7 +46,7 @@ class ScreenRequest extends FormRequest
             'contact.email' => ['nullable', 'email'],
             'contact.phone' => ['nullable', 'string'],
 
-            // 'documents' => ['required', 'array'],            
+            // 'documents' => ['required', 'array'],
             // 'documents.id_front' => ['required', 'string'],
             // 'documents.id_back' => ['required', 'string'],
             // 'documents.passport' => ['required', 'string'],
