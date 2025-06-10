@@ -42,6 +42,8 @@ class GlairAIService implements KYCServiceInterface
         $data = $this->prepareData($userDataDTO);
         $this->validateData($data);
         $response = $this->basicVerification($profile, $userDataDTO, $data);
+        $profile->provider_response_data = $response;
+        $profile->save();
         $profile->refresh();
 
         GlairAISendToMexarKYCResultJob::dispatch(
@@ -115,10 +117,10 @@ class GlairAIService implements KYCServiceInterface
             ->post($url, $data);
 
         ApiRequestLog::saveRequest(
-            $data,
-            $response->body(),
-            $userDataDTO->uuid,
-            $userDataDTO->meta->service_provider,
+            data:  $data,
+            response: $response->body(),
+            request_uuid: $userDataDTO->uuid,
+            provider: $userDataDTO->meta->service_provider,
         );
 
         $responseData = $response->json() ?? [];

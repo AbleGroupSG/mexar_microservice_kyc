@@ -3,7 +3,9 @@
 namespace App\Services\KYC\Regtank;
 
 use App\DTO\UserDataDTO;
+use App\Enums\KycStatuseEnum;
 use App\Models\ApiRequestLog;
+use App\Models\KYCProfile;
 use App\Services\KYC\KYCServiceInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Carbon;
@@ -21,11 +23,15 @@ readonly class RegtankService implements KYCServiceInterface
     public function screen(UserDataDTO $userDataDTO): array
     {
         $accessToken = RegtankAuth::getToken();
+        $profile = $this->createProfile($userDataDTO);
         $data = $this->prepareData($userDataDTO);
         $url = config('regtank.specific_server_url');
 
         $response = Http::withToken($accessToken)
             ->post("$url/v2/djkyc/exchange/input", $data);
+
+        $profile->provider_reference_id = $response->body();
+        $profile->save();
 
         ApiRequestLog::saveRequest(
             $data,
@@ -33,8 +39,6 @@ readonly class RegtankService implements KYCServiceInterface
             $userDataDTO->uuid,
             $userDataDTO->meta->service_provider,
         );
-
-
 
         $responseData = $response->json() ?? [];
         if(!$response->successful()) {
@@ -46,6 +50,18 @@ readonly class RegtankService implements KYCServiceInterface
         }
 
         return $responseData;
+    }
+
+    private function createProfile(UserDataDTO $userDataDTO):KYCProfile
+    {
+        $profile = new KYCProfile();
+        $profile->id = $userDataDTO->uuid;
+        $profile->profile_data = $userDataDTO->toJson();
+        $profile->provider = $userDataDTO->meta->service_provider;
+        $profile->status = KycStatuseEnum::PENDING;
+        $profile->save();
+
+        return $profile;
     }
 
     private function prepareData(UserDataDTO $userDataDTO):array
