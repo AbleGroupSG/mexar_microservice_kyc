@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class VerifyApiKey
@@ -19,10 +21,14 @@ class VerifyApiKey
         if(empty($apiKey)) {
             abort(403, 'Forbidden');
         }
-        $localKey = config('app.key_secret');
-        if($localKey!= $apiKey) {
-            abort(403, "Forbidden");
+
+        $user = User::query()->where('api_key', $apiKey)->first();
+
+        if (!$user) {
+            abort(403, 'Forbidden');
         }
+
+        Auth::setUser($user);
 
         return $next($request);
     }
