@@ -52,8 +52,8 @@ class RegtankWebhookController extends Controller
     private function resolveStatus(string $status): KycStatuseEnum
     {
         return match ($status) {
-            'Approved', 'Score Generated' => KycStatuseEnum::APPROVED,
-            'Rejected' => KycStatuseEnum::REJECTED,
+            'Approved' => KycStatuseEnum::APPROVED,
+            'Rejected', 'Unresolved', 'No Match', 'Positive Match' => KycStatuseEnum::REJECTED,
             default => KycStatuseEnum::UNRESOLVED,
         };
     }

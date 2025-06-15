@@ -52,9 +52,9 @@ class MexarAppService
                 // required for all status, a message describe the current status
                 'message' => 'KYC verification completed risk level: ' . $data->riskLevel,
                 // required if status is approved, rejected
-                'review_notes' => '',
+                'review_notes' => $data->status,
                 // optional, only present on error status
-                'failure_reason' => '',
+                'failure_reason' => $status == KycStatuseEnum::REJECTED ? $data->status : null,
             ],
         ];
     }
