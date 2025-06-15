@@ -3,10 +3,12 @@
 namespace App\Http\Webhooks;
 
 use App\DTO\Webhooks\KycDTO;
+use App\DTOs\Webhooks\DjkybDTO;
 use App\Enums\AppNameEnum;
 use App\Enums\KycStatuseEnum;
 use App\Enums\WebhookTypeEnum;
 use App\Http\Controllers\Controller;
+use App\Models\CompanyKyb;
 use App\Models\KYCProfile;
 use App\Models\WebhookLog;
 use App\Services\EFormAppService;
@@ -14,6 +16,7 @@ use App\Services\MexarAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class RegtankWebhookController extends Controller
 {
@@ -36,7 +39,7 @@ class RegtankWebhookController extends Controller
 
             $app = $profile->user;
             if ($app->name === AppNameEnum::E_FORM) {
-                $this->EFormAppService->send($data);
+                $this->EFormAppService->sendKyc($data);
             }
 
             if($app->name === AppNameEnum::MEXAR && $status !== KycStatuseEnum::UNRESOLVED) {
@@ -56,5 +59,19 @@ class RegtankWebhookController extends Controller
             'Rejected', 'Unresolved', 'No Match', 'Positive Match' => KycStatuseEnum::REJECTED,
             default => KycStatuseEnum::UNRESOLVED,
         };
+    }
+
+    public function djkyb(): JsonResponse
+    {
+        $data = request()->all();
+        WebhookLog::saveRequest(WebhookLog::REGTANK, WebhookTypeEnum::fromString('djkyb'), $data);
+
+        try {
+            $this->EFormAppService->sendDjkyb($data);
+        }catch (Throwable $e) {
+            logger()->error('CompanyKyb not found', ['request_id' => $data['requestId']]);
+        }
+
+        return response()->json(['status' => true], Response::HTTP_OK);
     }
 }
