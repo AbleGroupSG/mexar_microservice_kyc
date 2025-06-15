@@ -81,7 +81,7 @@ class KycController extends APIController
 
     private function logRequest(KycRequest $request, $uuid): void
     {
-        Log::info('KYC Request', [
+        Log::info('OCR Request', [
             'uuid' => $uuid,
             'document_type' => $request->input('document_type'),
             'timestamp' => Carbon::now()->toDateTimeString(),
