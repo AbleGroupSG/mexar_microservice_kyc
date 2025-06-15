@@ -8,6 +8,7 @@ enum KycStatuseEnum: string
     case REJECTED = "rejected";
     case APPROVED = "approved";
     case ERROR = "error";
+    case UNRESOLVED = "unresolved";
 
     public static function getValues(): array
     {
@@ -16,6 +17,7 @@ enum KycStatuseEnum: string
             self::REJECTED,
             self::APPROVED,
             self::ERROR,
+            self::UNRESOLVED,
         ];
     }
 }

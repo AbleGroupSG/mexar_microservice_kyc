@@ -9,12 +9,19 @@ use App\Enums\WebhookTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\KYCProfile;
 use App\Models\WebhookLog;
+use App\Services\EFormAppService;
+use App\Services\MexarAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response;
 
 class RegtankWebhookController extends Controller
 {
+    public function __construct(
+        protected MexarAppService $mexarAppService,
+        protected EFormAppService $EFormAppService,
+    ) {}
+
     public function kyc(): JsonResponse
     {
         $data = request()->all();
@@ -29,11 +36,12 @@ class RegtankWebhookController extends Controller
 
             $app = $profile->user;
             if ($app->name === AppNameEnum::E_FORM) {
-                $this->sendToEForm($data);
+                $this->EFormAppService->send($data);
             }
 
-
-            //TODO Send data to MEXAR
+            if($app->name === AppNameEnum::MEXAR && $status !== KycStatuseEnum::UNRESOLVED) {
+                $this->mexarAppService->send($profile, $dto, $status);
+            }
         } else {
             logger()->error('Kyc profile not found', ['provider_reference_id' => $dto->requestId]);
         }
@@ -46,23 +54,7 @@ class RegtankWebhookController extends Controller
         return match ($status) {
             'Approved', 'Score Generated' => KycStatuseEnum::APPROVED,
             'Rejected' => KycStatuseEnum::REJECTED,
-            default => KycStatuseEnum::ERROR,
+            default => KycStatuseEnum::UNRESOLVED,
         };
-    }
-
-    private function sendToEForm(array $data): void
-    {
-        $url = config('app.eform.url');
-        $response = Http::post("$url/kyc", $data);
-
-        if (!$response->successful()) {
-            logger()->error('Failed to send KYC data to E-Form', [
-                'status' => $response->status(),
-                'response' => $response->json(),
-                'data' => $data,
-            ]);
-        } else {
-            logger()->info('KYC data sent to E-Form successfully', ['response' => $response->body()]);
-        }
     }
 }

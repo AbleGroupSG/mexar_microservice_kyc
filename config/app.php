@@ -127,5 +127,8 @@ return [
 
     'eform' => [
         'url' => env('EFORM_URL'),
-    ]
+    ],
+    'mexar' => [
+        'url' => env('MEXAR_URL'),
+    ],
 ];
