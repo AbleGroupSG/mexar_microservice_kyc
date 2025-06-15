@@ -74,4 +74,18 @@ class RegtankWebhookController extends Controller
 
         return response()->json(['status' => true], Response::HTTP_OK);
     }
+
+    public function liveness(): JsonResponse
+    {
+        $data = request()->all();
+        WebhookLog::saveRequest(WebhookLog::REGTANK, WebhookTypeEnum::fromString('liveness'), $data);
+
+        try {
+            $this->EFormAppService->sendLiveness($data);
+        }catch (Throwable $e) {
+            logger()->error('CompanyKyb not found', ['request_id' => $data['requestId']]);
+        }
+
+        return response()->json(['status' => true], Response::HTTP_OK);
+    }
 }

@@ -34,7 +34,23 @@ class EFormAppService
                 'data' => $data,
             ]);
         } else {
-            logger()->info('KYC data sent to E-Form successfully', ['response' => $response->body()]);
+            logger()->info('KYB data sent to E-Form successfully', ['response' => $response->body()]);
+        }
+    }
+
+    public function sendLiveness(array $data): void
+    {
+        $url = config('app.eform.url');
+        $response = Http::post("$url/liveness", $data);
+
+        if (!$response->successful()) {
+            logger()->error('Failed to send Liveness data to E-Form', [
+                'status' => $response->status(),
+                'response' => $response->json(),
+                'data' => $data,
+            ]);
+        } else {
+            logger()->info('Liveness data sent to E-Form successfully', ['response' => $response->body()]);
         }
     }
 }
