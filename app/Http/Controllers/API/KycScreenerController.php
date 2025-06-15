@@ -22,6 +22,7 @@ class KycScreenerController extends APIController
     {
         $uuid = Str::uuid();
         $data = UserDataDTO::from(['uuid' => $uuid, ...$request->validated()]);
+        $user = $request->user();
         $serviceProvider = $data->meta->service_provider;
 
         $service = match(KycServiceTypeEnum::from($serviceProvider)) {
@@ -30,7 +31,7 @@ class KycScreenerController extends APIController
         };
 
         try {
-            $response = $service->screen($data);
+            $response = $service->screen($data, $user);
             return $this->respondWithWrapper($response, 'Screening successful');
         } catch (HttpException|ConnectionException $e) {
 

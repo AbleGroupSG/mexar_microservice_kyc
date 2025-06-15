@@ -9,6 +9,7 @@ use App\Enums\KycStatuseEnum;
 use App\Jobs\GlairAISendToMexarKYCResultJob;
 use App\Models\ApiRequestLog;
 use App\Models\KYCProfile;
+use App\Models\User;
 use App\Services\KYC\KYCServiceInterface;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
@@ -36,9 +37,9 @@ class GlairAIService implements KYCServiceInterface
     /**
      * @throws Exception
      */
-    public function screen(UserDataDTO $userDataDTO): array
+    public function screen(UserDataDTO $userDataDTO, User $user): array
     {
-        $profile = $this->createProfile($userDataDTO);
+        $profile = $this->createProfile($userDataDTO, $user);
         $data = $this->prepareData($userDataDTO);
         $this->validateData($data);
         $response = $this->basicVerification($profile, $userDataDTO, $data);
@@ -146,11 +147,12 @@ class GlairAIService implements KYCServiceInterface
         return $responseData;
     }
 
-    private function createProfile(UserDataDTO $userDataDTO):KYCProfile
+    private function createProfile(UserDataDTO $userDataDTO, User $user):KYCProfile
     {
         $profile = new KYCProfile();
         $profile->id = $userDataDTO->uuid;
         $profile->profile_data = $userDataDTO->toJson();
+        $profile->user_id = $user->id;
         $profile->provider = $userDataDTO->meta->service_provider;
         $profile->save();
 

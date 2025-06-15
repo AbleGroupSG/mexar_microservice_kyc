@@ -3,12 +3,14 @@
 namespace App\Http\Webhooks;
 
 use App\DTO\Webhooks\KycDTO;
+use App\Enums\AppNameEnum;
 use App\Enums\KycStatuseEnum;
 use App\Enums\WebhookTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\KYCProfile;
 use App\Models\WebhookLog;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response;
 
 class RegtankWebhookController extends Controller
@@ -25,6 +27,10 @@ class RegtankWebhookController extends Controller
             $profile->status = $status;
             $profile->save();
 
+            $app = $profile->user;
+            if ($app->name === AppNameEnum::E_FORM) {
+                $this->sendToEForm($data);
+            }
 
 
             //TODO Send data to MEXAR
@@ -42,5 +48,21 @@ class RegtankWebhookController extends Controller
             'Rejected' => KycStatuseEnum::REJECTED,
             default => KycStatuseEnum::ERROR,
         };
+    }
+
+    private function sendToEForm(array $data): void
+    {
+        $url = config('app.eform.url');
+        $response = Http::post("$url/kyc", $data);
+
+        if (!$response->successful()) {
+            logger()->error('Failed to send KYC data to E-Form', [
+                'status' => $response->status(),
+                'response' => $response->json(),
+                'data' => $data,
+            ]);
+        } else {
+            logger()->info('KYC data sent to E-Form successfully', ['response' => $response->body()]);
+        }
     }
 }

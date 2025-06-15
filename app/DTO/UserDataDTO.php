@@ -34,8 +34,8 @@ class IdentificationData extends Data
         public string $id_type,
         public string $id_number,
         public string $issuing_country,
-        public string $issue_date,
-        public string $expiry_date,
+        public ?string $issue_date,
+        public ?string $expiry_date,
     ) {}
 }
 
@@ -44,8 +44,8 @@ class AddressData extends Data
     public function __construct(
         public string $street,
         public string $city,
-        public string $state,
-        public string $postal_code,
+        public ?string $state,
+        public ?string $postal_code,
         public string $country,
     ) {}
 }

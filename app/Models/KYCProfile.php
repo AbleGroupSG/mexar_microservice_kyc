@@ -4,11 +4,13 @@ namespace App\Models;
 
 use App\Enums\KycStatuseEnum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
  * @property string id
  * @property string profile_data
+ * @property array user_id
  * @property string provider_reference_id
  * @property string provider_response_data
  * @property string provider
@@ -24,6 +26,7 @@ class KYCProfile extends Model
     protected $fillable = [
         'id',
         'profile_data',
+        'user_id',
         'provider_reference_id',
         'provider_response_data',
         'provider',
@@ -35,4 +38,9 @@ class KYCProfile extends Model
         'profile_data' => 'array',
         'status' => KycStatuseEnum::class,
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }
