@@ -28,7 +28,7 @@ readonly class TestService implements KYCServiceInterface
         TestKYCResultJob::dispatch(
             userDataDTO: $userDataDTO,
             status: $status,
-        )->delay(now()->addSeconds(3));
+        )->delay(now()->addMinutes(2));
 
         ApiRequestLog::saveRequest(
             ['user_data' => $userDataDTO->toJson()],
