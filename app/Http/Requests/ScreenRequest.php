@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Enums\KycServiceTypeEnum;
+use App\Enums\KycStatuseEnum;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
 class ScreenRequest extends FormRequest
@@ -55,6 +57,7 @@ class ScreenRequest extends FormRequest
             'meta' => ['required', 'array'],
             'meta.service_provider' => ['required', new Enum(KycServiceTypeEnum::class)],
             'meta.reference_id' => ['required',],
+            'meta.status' => ['nullable', Rule::enum(KycStatuseEnum::class)],
         ];
     }
 }

@@ -7,6 +7,7 @@ use App\Enums\KycServiceTypeEnum;
 use App\Http\Requests\ScreenRequest;
 use App\Services\KYC\GlairAI\GlairAIService;
 use App\Services\KYC\Regtank\RegtankService;
+use App\Services\KYC\Test\TestService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
@@ -28,13 +29,13 @@ class KycScreenerController extends APIController
         $service = match(KycServiceTypeEnum::from($serviceProvider)) {
             KycServiceTypeEnum::REGTANK => new RegtankService(),
             KycServiceTypeEnum::GLAIR_AI => new GlairAIService(),
+            KycServiceTypeEnum::TEST => new TestService()
         };
 
         try {
             $response = $service->screen($data, $user);
             return $this->respondWithWrapper($response, 'Screening successful');
         } catch (HttpException|ConnectionException $e) {
-
             return $this->respondWithError([
                 'error' => $e->getMessage(),
             ], $e->getStatusCode() ?? Response::HTTP_BAD_REQUEST, 'Screening failed');
