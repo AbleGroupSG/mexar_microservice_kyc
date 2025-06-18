@@ -25,6 +25,8 @@ class KycRequest extends FormRequest
             'options.enhance' => 'nullable|boolean',
             'options.lang' => 'nullable|string',
             'options.detect_orientation' => 'nullable|boolean',
+            'meta' => 'array',
+            'meta.test' => 'nullable|boolean',
         ];
     }
 }

@@ -61,6 +61,9 @@ class KycController extends APIController
     private function handleKTP(KycRequest $request, $uuid): array
     {
         $service = new GlairAIService();
+        if (isset($request->meta['test'])) {
+            return $service->formatResult([]);
+        }
         $path = $request->file('image')->store('uploads', 'public');
         $result = $service->readOCR(GlairAIService::KTP_URL, storage_path('app/public/'.$path));
 
@@ -73,6 +76,9 @@ class KycController extends APIController
     private function handlePassport(KycRequest $request, $uuid): array
     {
         $service = new GlairAIService();
+        if (isset($request->meta['test'])) {
+            return $service->formatResult([]);
+        }
         $path = $request->file('image')->store('uploads', 'public');
         $result = $service->readOCR(GlairAIService::PASSPORT_URL, storage_path('app/public/'.$path));
 
