@@ -1,0 +1,26 @@
+services:
+  nginx:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=mexar_microservice_kyc_backend"
+      - "traefik.http.routers.nginx.rule=Host(`kyc.localhost`)"
+      - "traefik.http.routers.nginx.entrypoints=web"
+      - "traefik.http.routers.nginx.service=nginx"
+      - "traefik.http.services.nginx.loadbalancer.server.port=80"   
+      
+      
+      
+
+  traefik:
+    ports:
+      - "8080:8080"
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      
+      # 開啟更詳細的日誌，以備不時之需
+      - "--log.level=DEBUG"
+         

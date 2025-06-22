@@ -1,0 +1,50 @@
+# ignore git files
+.git
+.gitignore
+
+# ignore node_modules
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-lock.yaml
+bun.lockb
+
+# ignore php vendor
+vendor
+
+# laravel specific
+storage/*.key
+storage/*.log
+storage/debugbar
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+bootstrap/cache/*.php
+
+# composer files
+#composer.lock
+composer.phar
+
+# environment files
+.env
+.env.*
+
+# build files
+public/hot
+public/storage
+storage/app/public
+*.pid
+
+# Docker specific files
+docker-compose.override.yml
+.dockerignore
+Dockerfile*
+
+# Mac / Linux / Windows specific files
+*.DS_Store
+*.swp
+*.bak
+Thumbs.db
+ehthumbs.db
+Icon?
