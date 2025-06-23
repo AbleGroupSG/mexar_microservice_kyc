@@ -26,8 +26,8 @@ class ScreenRequest extends FormRequest
             'personal_info' => ['required', 'array'],
             'personal_info.first_name' => ['required', 'string'],
             'personal_info.last_name' => ['required', 'string'],
-            'personal_info.gender' => ['required', 'string', 'in:Male,Female,Unspecified'],
-            'personal_info.date_of_birth' => ['required', 'date', 'date_format:Y-m-d'],
+            'personal_info.gender' => ['sometimes', 'string', 'in:Male,Female,Unspecified'],
+            'personal_info.date_of_birth' => ['nullable', 'date', 'date_format:Y-m-d'],
             'personal_info.nationality' => ['required', 'string', 'size:2'], //cca2,id,sg
 
             'identification' => ['required', 'array'],
@@ -38,11 +38,12 @@ class ScreenRequest extends FormRequest
             'identification.expiry_date' => ['nullable', 'date', 'date_format:Y-m-d', 'after:identification.issue_date'],
 
             'address' => ['nullable', 'array'],
-            'address.street' => ['required', 'string'],
+            'address.street' => ['nullable', 'string'],
             'address.city' => ['required', 'string'],
             'address.state' => ['nullable', 'string'],
             'address.postal_code' => ['nullable', 'string'],
             'address.country' => ['required', 'string', 'size:2'],
+            'address.address_line' => ['required', 'string'],
 
             'contact' => ['nullable', 'array'],
             'contact.email' => ['nullable', 'email'],

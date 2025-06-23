@@ -25,7 +25,12 @@ class KycScreenerController extends APIController
         $data = UserDataDTO::from(['uuid' => $uuid, ...$request->validated()]);
         $user = $request->user();
         $serviceProvider = $data->meta->service_provider;
-
+        logger()->debug('KYC screening request', [
+            'uuid' => $uuid,
+            'user_id' => $user->id,
+            'service_provider' => $serviceProvider,
+            'data' => $data->toArray(),
+        ]);
         $service = match(KycServiceTypeEnum::from($serviceProvider)) {
             KycServiceTypeEnum::REGTANK => new RegtankService(),
             KycServiceTypeEnum::GLAIR_AI => new GlairAIService(),

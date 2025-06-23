@@ -11,7 +11,7 @@ class UserDataDTO extends Data
         public PersonalInfoData $personal_info,
         public IdentificationData $identification,
         public AddressData $address,
-        public ContactData $contact,
+        public ?ContactData $contact,
 //        public DocumentsData $documents,
         public MetaData $meta,
     ) {}
@@ -22,9 +22,9 @@ class PersonalInfoData extends Data
     public function __construct(
         public string $first_name,
         public string $last_name,
-        public string $gender,
-        public string $date_of_birth,
-        public string $nationality,
+        public ?string $gender,
+        public ?string $date_of_birth,
+        public ?string $nationality,
     ) {}
 }
 
@@ -42,11 +42,12 @@ class IdentificationData extends Data
 class AddressData extends Data
 {
     public function __construct(
-        public string $street,
+        public ?string $street,
         public string $city,
         public ?string $state,
         public ?string $postal_code,
         public string $country,
+        public string $address_line = '',
     ) {}
 }
 

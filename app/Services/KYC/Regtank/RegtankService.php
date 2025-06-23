@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Psr\Log\NullLogger;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
@@ -87,13 +88,13 @@ readonly class RegtankService implements KYCServiceInterface
             'yearOfBirth' => $dateOfBirth?->year,
             'strictDateMatch' => true,
             'assignee' => $assignee,
-            'email' => $userDataDTO->contact->email,
-            'phone' => $userDataDTO->contact->phone,
+            'email' => $userDataDTO->contact->email ?? null,
+            'phone' => $userDataDTO->contact->phone ?? null,
             'address1' => $address1,
             'address2' => $address2,
-            'gender' => Str::upper($userDataDTO->personal_info->gender),
-            'nationality' => $userDataDTO->personal_info->nationality,
-            'idIssuingCountry' => $userDataDTO->identification->issuing_country,
+            'gender' => Str::upper($userDataDTO->personal_info->gender) ?? null,
+            'nationality' => $userDataDTO->personal_info->nationality ?? null,
+            'idIssuingCountry' => $userDataDTO->identification->issuing_country ?? null,
             'enableOnGoingMonitoring' => true,
             'enableReScreening' => true,
         ];
@@ -102,7 +103,7 @@ readonly class RegtankService implements KYCServiceInterface
     private function prepareAddress(UserDataDTO $userDataDTO): array
     {
         $addressData = $userDataDTO->address;
-        $fullAddress = "$addressData->street, $addressData->city, $addressData->state, $addressData->postal_code, $addressData->country";
+        $fullAddress = "$addressData->address_line, $addressData->street, $addressData->city, $addressData->state, $addressData->postal_code, $addressData->country";
 
         $address1 = Str::limit($fullAddress, 255, '');
 

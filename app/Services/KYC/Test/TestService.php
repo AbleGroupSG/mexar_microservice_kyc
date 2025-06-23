@@ -11,11 +11,11 @@ use App\Models\User;
 use App\Services\KYC\KYCServiceInterface;
 use Illuminate\Support\Str;
 
-readonly class TestService implements KYCServiceInterface
+class TestService implements KYCServiceInterface
 {
     public function screen(UserDataDTO $userDataDTO, User $user): array
     {
-        $status = KycStatuseEnum::from($userDataDTO->meta->status);
+        $status = KycStatuseEnum::from($userDataDTO->meta->status ?? 'approved');
         $profile = new KYCProfile();
         $profile->id = $userDataDTO->uuid;
         $profile->profile_data = $userDataDTO->toJson();
@@ -28,7 +28,7 @@ readonly class TestService implements KYCServiceInterface
         TestKYCResultJob::dispatch(
             userDataDTO: $userDataDTO,
             status: $status,
-        )->delay(now()->addMinute());
+        )->delay(now()->addSeconds(mt_rand(5, 10)));
 
         ApiRequestLog::saveRequest(
             ['user_data' => $userDataDTO->toJson()],
