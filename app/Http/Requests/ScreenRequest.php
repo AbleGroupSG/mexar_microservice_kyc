@@ -56,7 +56,7 @@ class ScreenRequest extends FormRequest
             // 'documents.utility_bill' => ['required', 'string'],
 
             'meta' => ['required', 'array'],
-            'meta.service_provider' => ['required', new Enum(KycServiceTypeEnum::class)],
+            'meta.service_provider' => ['required', 'in:' . implode(',', KycServiceTypeEnum::values())],
             'meta.reference_id' => ['required',],
             'meta.status' => ['nullable', Rule::enum(KycStatuseEnum::class)],
         ];
