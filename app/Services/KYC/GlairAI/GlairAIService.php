@@ -51,7 +51,7 @@ class GlairAIService implements KYCServiceInterface
             userDataDTO: $userDataDTO,
             status: $profile->status,
             error: $response['reason'] ?? null
-        )->delay(now()->addMinutes(3));
+        )->delay(now()->addSeconds(10));
 
         return $this->prepareResponse($userDataDTO, $profile->status);
     }
