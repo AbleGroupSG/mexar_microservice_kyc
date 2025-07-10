@@ -26,11 +26,20 @@ class EntityOnboardingController extends APIController
             $response = json_decode($response, true);
             return $this->respondWithWrapper($response, 'Screening successful');
         } catch (HttpException|ConnectionException $e) {
-
+            logger()->error('Entity onboarding request failed', [
+                'error' => $e->getMessage(),
+                'data' => $data,
+                'trace' => $e->getTraceAsString(),
+            ]);
             return $this->respondWithError([
                 'error' => $e->getMessage(),
-            ], $e->getStatusCode() ?? Response::HTTP_BAD_REQUEST, 'Screening failed');
+            ], Response::HTTP_INTERNAL_SERVER_ERROR, 'Screening failed');
         } catch (Throwable $e) {
+            logger()->error('An error occurred during entity onboarding', [
+                'error' => $e->getMessage(),
+                'data' => $data,
+                'trace' => $e->getTraceAsString(),
+            ]);
             return $this->respondWithError([
                 'error' => 'An internal error happened',
             ], Response::HTTP_INTERNAL_SERVER_ERROR, 'Screening failed');
