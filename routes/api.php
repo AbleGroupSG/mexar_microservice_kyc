@@ -15,8 +15,8 @@ Route::get('/user', function (Request $request) {
 
 Route::middleware(VerifyApiKey::class)->group(function () {
     Route::post('/screen', [KycScreenerController::class, 'screen']);
-    Route::get('/e-form-kyb', [KybScreenController::class, 'kyb']);
-    Route::get('/e-form-onboarding', [EntityOnboardingController::class, 'check']);
+    Route::post('/e-form-kyb', [KybScreenController::class, 'kyb']);
+    Route::post('/e-form-onboarding', [EntityOnboardingController::class, 'check']);
     Route::get('/status/{uuid}', [KycScreenerController::class, 'status']);
 });
 
