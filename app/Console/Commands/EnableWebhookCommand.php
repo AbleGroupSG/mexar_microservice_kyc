@@ -13,13 +13,17 @@ class EnableWebhookCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'enable.webhook.command {--isEnabled}';
+    protected $signature = 'app:webhook:register {--isEnabled}';
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $isEnabled = $this->option('isEnabled');
+        $isEnabled = $this->option('isEnabled') ?? true;
+        if (!is_bool($isEnabled)) {
+            $this->error('The --isEnabled option must be a boolean value.');
+            return;
+        }
 
         $accessToken = RegtankAuth::getToken();
         $url = config('e-form.regtank.specific_server_url');
@@ -29,9 +33,13 @@ class EnableWebhookCommand extends Command
         ];
 
         $res=  Http::withToken($accessToken)
-            ->post("$url/alert/preferences", $data)
-            ->json();
+            ->post("$url/alert/preferences", $data);
+            
 
-        dump($res);
+        if( $res->status() === 200) {
+            $this->info('Webhook enabled successfully');
+        } else {
+            $this->error('Failed to enable webhook: ' . $res->body());
+        }
     }
 }
