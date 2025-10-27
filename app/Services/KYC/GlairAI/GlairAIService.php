@@ -6,10 +6,11 @@ use App\DTO\GlarAICredentialsDTO;
 use App\DTO\UserDataDTO;
 use App\Enums\KycServiceTypeEnum;
 use App\Enums\KycStatuseEnum;
-use App\Jobs\GlairAISendToMexarKYCResultJob;
+use App\Jobs\GlairAIVerificationJob;
 use App\Models\ApiRequestLog;
 use App\Models\KYCProfile;
 use App\Models\User;
+use App\Models\UserApiKey;
 use App\Services\KYC\KYCServiceInterface;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
@@ -37,23 +38,19 @@ class GlairAIService implements KYCServiceInterface
     /**
      * @throws Exception
      */
-    public function screen(UserDataDTO $userDataDTO, User $user): array
+    public function screen(UserDataDTO $userDataDTO, User $user, UserApiKey $userApiKey): array
     {
-        $profile = $this->createProfile($userDataDTO, $user);
+        // Create profile with PENDING status
+        $profile = $this->createProfile($userDataDTO, $user, $userApiKey);
         $data = $this->prepareData($userDataDTO);
         $this->validateData($data);
-        $response = $this->basicVerification($profile, $userDataDTO, $data);
-        $profile->provider_response_data = $response;
-        $profile->save();
-        $profile->refresh();
 
-        GlairAISendToMexarKYCResultJob::dispatch(
-            userDataDTO: $userDataDTO,
-            status: $profile->status,
-            error: $response['reason'] ?? null
-        )->delay(now()->addSeconds(10));
+        // Dispatch async job to process verification
+        GlairAIVerificationJob::dispatch($profile->id, $userDataDTO, $data)
+            ->delay(now()->addSeconds(2));
 
-        return $this->prepareResponse($userDataDTO, $profile->status);
+        // Return only reference ID (consistent with RegTank)
+        return ['identity' => $profile->id];
     }
 
     private function prepareData(UserDataDTO $userDataDTO): array
@@ -126,16 +123,8 @@ class GlairAIService implements KYCServiceInterface
 
         $responseData = $response->json() ?? [];
         if(!$response->successful()) {
-
             Log::error('Unsuccessful request', ['response' => $responseData]);
             $error = $responseData['error'] ?? 'An error occurred';
-
-            GlairAISendToMexarKYCResultJob::dispatch(
-                userDataDTO: $userDataDTO,
-                status: KycStatuseEnum::ERROR,
-                error: $error
-            )->delay(now()->addMinutes(3));
-
             throw new HttpException($response->status(), $error);
         }
 
@@ -147,13 +136,15 @@ class GlairAIService implements KYCServiceInterface
         return $responseData;
     }
 
-    private function createProfile(UserDataDTO $userDataDTO, User $user):KYCProfile
+    private function createProfile(UserDataDTO $userDataDTO, User $user, UserApiKey $userApiKey): KYCProfile
     {
         $profile = new KYCProfile();
         $profile->id = $userDataDTO->uuid;
         $profile->profile_data = $userDataDTO->toJson();
         $profile->user_id = $user->id;
+        $profile->user_api_key_id = $userApiKey->id;
         $profile->provider = $userDataDTO->meta->service_provider;
+        $profile->status = KycStatuseEnum::PENDING;
         $profile->save();
 
         return $profile;

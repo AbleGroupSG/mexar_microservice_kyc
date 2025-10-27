@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\AppNameEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -57,7 +57,22 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'name' => AppNameEnum::class,
         ];
+    }
+
+    /**
+     * Get the API keys for the user.
+     */
+    public function apiKeys(): HasMany
+    {
+        return $this->hasMany(UserApiKey::class);
+    }
+
+    /**
+     * Get the KYC profiles for the user.
+     */
+    public function kycProfiles(): HasMany
+    {
+        return $this->hasMany(KYCProfile::class);
     }
 }

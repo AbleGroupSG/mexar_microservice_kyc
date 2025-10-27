@@ -7,6 +7,7 @@ use App\Enums\KycStatuseEnum;
 use App\Models\ApiRequestLog;
 use App\Models\KYCProfile;
 use App\Models\User;
+use App\Models\UserApiKey;
 use App\Services\KYC\KYCServiceInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Carbon;
@@ -22,10 +23,10 @@ readonly class RegtankService implements KYCServiceInterface
     /**
      * @throws ConnectionException|Throwable|HttpException
      */
-    public function screen(UserDataDTO $userDataDTO, User $user): array
+    public function screen(UserDataDTO $userDataDTO, User $user, UserApiKey $userApiKey): array
     {
         $accessToken = RegtankAuth::getToken();
-        $profile = $this->createProfile($userDataDTO, $user);
+        $profile = $this->createProfile($userDataDTO, $user, $userApiKey);
         $data = $this->prepareData($userDataDTO);
         $url = config('regtank.specific_server_url');
 
@@ -56,13 +57,14 @@ readonly class RegtankService implements KYCServiceInterface
         ];
     }
 
-    private function createProfile(UserDataDTO $userDataDTO, User $user):KYCProfile
+    private function createProfile(UserDataDTO $userDataDTO, User $user, UserApiKey $userApiKey): KYCProfile
     {
         $profile = new KYCProfile();
         $profile->id = $userDataDTO->uuid;
         $profile->profile_data = $userDataDTO->toJson();
         $profile->provider = $userDataDTO->meta->service_provider;
         $profile->user_id = $user->id;
+        $profile->user_api_key_id = $userApiKey->id;
         $profile->status = KycStatuseEnum::PENDING;
         $profile->save();
 
