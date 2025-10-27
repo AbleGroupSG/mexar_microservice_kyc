@@ -123,7 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    'key_secret' => env('MEXAR_KEY_SECRET'),
+    'key_secret' => env('MEXAR_SIGNATURE_SECRET'),
 
     'eform' => [
         'url' => env('EFORM_URL'),
