@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\API\KycController;
+use App\Http\Controllers\API\OCRController;
 use App\Http\Controllers\API\KycScreenerController;
 use App\Http\Controllers\EntityOnboardingController;
 use App\Http\Controllers\KybScreenController;
@@ -21,5 +21,5 @@ Route::middleware(VerifyApiKey::class)->group(function () {
 });
 
 Route::prefix('v1')->group(function (){
-    Route::post('/ocr', [KycController::class, 'ocr'])->middleware(VerifyJwtMiddleware::class);
+    Route::post('/ocr', [OCRController::class, 'ocr'])->middleware(VerifyJwtMiddleware::class);
 });

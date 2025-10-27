@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-class KycController extends APIController
+class OCRController extends APIController
 {
     public function ocr(KycRequest $request): JsonResponse
     {
