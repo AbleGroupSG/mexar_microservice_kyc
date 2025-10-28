@@ -2,6 +2,7 @@
 /node_modules
 /public/build
 /public/hot
+/public/vendor
 /public/storage
 /storage/*.key
 /storage/oauth/public.pem
@@ -24,5 +25,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+.scribe
 
 .DS_Store
