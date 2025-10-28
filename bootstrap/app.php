@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureDashboardEnabled;
 use App\Http\Middleware\VerifyApiKey;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'kyc',
             'liveness',
             'djkyb',
+        ]);
+
+        $middleware->alias([
+            'dashboard.enabled' => EnsureDashboardEnabled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

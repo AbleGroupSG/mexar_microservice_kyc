@@ -84,6 +84,10 @@ return [
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
+    'dashboard' =>  [
+        'enabled'   =>  env('DASHBOARD_ENABLED', true),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Encryption Key
