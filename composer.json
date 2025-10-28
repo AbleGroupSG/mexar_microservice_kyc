@@ -13,6 +13,7 @@
         "laravel/tinker": "^2.9",
         "lcobucci/jwt": "^4.2",
         "league/iso3166": "^4.3",
+        "livewire/livewire": "^3.6",
         "spatie/laravel-data": "^4.13"
     },
     "require-dev": {
