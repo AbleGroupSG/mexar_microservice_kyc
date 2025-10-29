@@ -20,6 +20,11 @@ class ApiKeys extends Component
     public string $signature_key = '';
     public bool $showCreateForm = false;
 
+    public function getIsAdminProperty(): bool
+    {
+        return auth()->user()->isAdmin();
+    }
+
     public function rules(): array
     {
         return [
@@ -47,7 +52,12 @@ class ApiKeys extends Component
 
     public function deleteApiKey(int $id): void
     {
-        $apiKey = auth()->user()->apiKeys()->findOrFail($id);
+        if ($this->isAdmin) {
+            $apiKey = UserApiKey::findOrFail($id);
+        } else {
+            $apiKey = auth()->user()->apiKeys()->findOrFail($id);
+        }
+
         $apiKey->delete();
 
         session()->flash('success', 'API key deleted successfully!');
@@ -64,8 +74,17 @@ class ApiKeys extends Component
 
     public function render()
     {
+        if ($this->isAdmin) {
+            // Admin sees all API keys
+            $apiKeys = UserApiKey::with('user')->latest()->paginate(10);
+        } else {
+            // Standard user sees only their own API keys
+            $apiKeys = auth()->user()->apiKeys()->latest()->paginate(10);
+        }
+
         return view('livewire.dashboard.api-keys', [
-            'apiKeys' => auth()->user()->apiKeys()->latest()->paginate(10),
+            'apiKeys' => $apiKeys,
+            'isAdmin' => $this->isAdmin,
         ]);
     }
 }

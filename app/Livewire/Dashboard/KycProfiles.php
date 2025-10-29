@@ -24,6 +24,11 @@ class KycProfiles extends Component
     #[Url(as: 'provider')]
     public string $providerFilter = '';
 
+    public function getIsAdminProperty(): bool
+    {
+        return auth()->user()->isAdmin();
+    }
+
     public function updatingSearch(): void
     {
         $this->resetPage();
@@ -51,14 +56,23 @@ class KycProfiles extends Component
             ->with(['user', 'apiKey'])
             ->latest();
 
+        // Filter by user for standard users
+        if (!$this->isAdmin) {
+            $query->where('user_id', auth()->id());
+        }
+
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('id', 'like', "%{$this->search}%")
-                    ->orWhere('provider_reference_id', 'like', "%{$this->search}%")
-                    ->orWhereHas('user', function ($userQuery) {
+                    ->orWhere('provider_reference_id', 'like', "%{$this->search}%");
+
+                // Only search user info if admin
+                if ($this->isAdmin) {
+                    $q->orWhereHas('user', function ($userQuery) {
                         $userQuery->where('name', 'like', "%{$this->search}%")
                             ->orWhere('email', 'like', "%{$this->search}%");
                     });
+                }
             });
         }
 
@@ -72,6 +86,7 @@ class KycProfiles extends Component
 
         return view('livewire.dashboard.kyc-profiles', [
             'kycProfiles' => $query->paginate(15),
+            'isAdmin' => $this->isAdmin,
         ]);
     }
 }

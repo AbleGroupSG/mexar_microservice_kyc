@@ -23,13 +23,10 @@ class KYCProfileFactory extends Factory
      */
     public function definition(): array
     {
-        $user = User::factory()->create();
-        $userApiKey = UserApiKey::factory()->create(['user_id' => $user->id]);
-
         return [
             'id' => (string) Str::uuid(),
-            'user_id' => $user->id,
-            'user_api_key_id' => $userApiKey->id,
+            'user_id' => User::factory(),
+            'user_api_key_id' => UserApiKey::factory(),
             'provider' => 'regtank',
             'provider_reference_id' => 'REF' . fake()->randomNumber(6),
             'profile_data' => [
@@ -46,6 +43,16 @@ class KYCProfileFactory extends Factory
             'provider_response_data' => null,
             'status' => KycStatuseEnum::PENDING,
         ];
+    }
+
+    /**
+     * Indicate that the profile is pending.
+     */
+    public function pending(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => KycStatuseEnum::PENDING,
+        ]);
     }
 
     /**

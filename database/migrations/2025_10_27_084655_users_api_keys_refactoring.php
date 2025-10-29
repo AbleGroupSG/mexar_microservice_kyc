@@ -43,6 +43,11 @@ return new class extends Migration {
      */
     public function down(): void
     {
+        Schema::table('kyc_profiles', function (Blueprint $table) {
+            $table->dropForeign('fk_kyc_profiles_user_api_key_id');
+            $table->dropIndex('idx_kyc_profiles_user_api_key_id');
+            $table->dropColumn('user_api_key_id');
+        });
         Schema::dropIfExists('users_api_keys');;
     }
 };

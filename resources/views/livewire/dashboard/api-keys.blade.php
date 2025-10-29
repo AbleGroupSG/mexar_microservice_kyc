@@ -102,6 +102,11 @@
                     <div class="flex justify-between items-start">
                         <div class="flex-1">
                             <h3 class="font-bold text-lg">{{ $apiKey->name }}</h3>
+                            @if ($isAdmin && $apiKey->user)
+                                <p class="text-sm text-base-content/70 font-semibold">
+                                    User: {{ $apiKey->user->name }}
+                                </p>
+                            @endif
                             <p class="text-sm text-base-content/70">
                                 Created {{ $apiKey->created_at->diffForHumans() }}
                             </p>

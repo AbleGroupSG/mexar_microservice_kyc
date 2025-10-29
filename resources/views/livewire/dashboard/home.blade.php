@@ -62,19 +62,21 @@
             </div>
         </div>
 
-        <!-- Total Users -->
-        <div class="stats shadow">
-            <div class="stat">
-                <div class="stat-figure text-secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
+        <!-- Total Users (Admin Only) -->
+        @if ($isAdmin)
+            <div class="stats shadow">
+                <div class="stat">
+                    <div class="stat-figure text-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <div class="stat-title">Total Users</div>
+                    <div class="stat-value text-secondary">{{ number_format($totalUsers) }}</div>
+                    <div class="stat-desc">System users</div>
                 </div>
-                <div class="stat-title">Total Users</div>
-                <div class="stat-value text-secondary">{{ number_format($totalUsers) }}</div>
-                <div class="stat-desc">System users</div>
             </div>
-        </div>
+        @endif
     </div>
 
     <!-- Quick Actions -->

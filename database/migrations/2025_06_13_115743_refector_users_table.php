@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('api_key', )->nullable();
             $table->string('email')->nullable()->change();
             $table->string('password')->nullable()->change();
+            $table->string('user_type', 32)->default('user')->after('name');
         });
 
         Schema::table('kyc_profiles', function (Blueprint $table) {
@@ -27,11 +28,23 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (Schema::hasColumn('users', 'api_key'))
+        {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('api_key');
+            });
+        }
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('api_key');
             $table->string('email')->nullable(false)->change();
             $table->string('password')->nullable(false)->change();
         });
+
+        if (Schema::hasColumn('users', 'user_type'))
+        {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('user_type');
+            });
+        }
 
         Schema::table('kyc_profiles', function (Blueprint $table) {
             $table->dropColumn('user_id');

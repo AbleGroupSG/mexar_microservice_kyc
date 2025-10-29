@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -16,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string $email
  * @property string $password
  * @property string|null $api_key
+ * @property UserTypeEnum $user_type
  * @property Carbon|null $email_verified_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -35,6 +37,7 @@ class User extends Authenticatable
         'email',
         'password',
         'api_key',
+        'user_type',
     ];
 
     /**
@@ -57,6 +60,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'user_type' => UserTypeEnum::class,
         ];
     }
 
@@ -74,5 +78,21 @@ class User extends Authenticatable
     public function kycProfiles(): HasMany
     {
         return $this->hasMany(KYCProfile::class);
+    }
+
+    /**
+     * Check if the user is an admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->user_type === UserTypeEnum::ADMIN;
+    }
+
+    /**
+     * Check if the user is a standard user.
+     */
+    public function isUser(): bool
+    {
+        return $this->user_type === UserTypeEnum::USER;
     }
 }
