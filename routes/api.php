@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\OCRController;
-use App\Http\Controllers\API\KycScreenerController;
+use App\Http\Controllers\API\KYCScreenController;
 use App\Http\Controllers\EntityOnboardingController;
 use App\Http\Controllers\KybScreenController;
 use App\Http\Middleware\VerifyApiKey;
@@ -14,10 +14,10 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::middleware(VerifyApiKey::class)->group(function () {
-    Route::post('/screen', [KycScreenerController::class, 'screen']);
+    Route::post('/screen', [KYCScreenController::class, 'screen']);
     Route::post('/e-form-kyb', [KybScreenController::class, 'kyb']);
     Route::post('/e-form-onboarding', [EntityOnboardingController::class, 'check']);
-    Route::get('/status/{uuid}', [KycScreenerController::class, 'status']);
+    Route::get('/status/{uuid}', [KYCScreenController::class, 'status']);
 });
 
 Route::prefix('v1')->group(function (){

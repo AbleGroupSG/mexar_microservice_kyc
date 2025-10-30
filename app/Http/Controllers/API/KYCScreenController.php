@@ -19,7 +19,7 @@ use Knuckles\Scribe\Attributes\UrlParam;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class KycScreenerController extends APIController
+class KYCScreenController extends APIController
 {
     #[Group("KYC Screening")]
     #[Endpoint(
