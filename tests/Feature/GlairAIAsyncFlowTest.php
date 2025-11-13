@@ -55,7 +55,7 @@ class GlairAIAsyncFlowTest extends TestCase
 
         $response = $this->withHeaders([
             'X-API-KEY' => $apiKey->api_key,
-        ])->postJson('/api/screen', $this->getValidScreeningData());
+        ])->postJson('/api/v1/screen', $this->getValidScreeningData());
 
         // Should return only identity reference, not status
         $response->assertOk()
@@ -79,7 +79,7 @@ class GlairAIAsyncFlowTest extends TestCase
 
         $response = $this->withHeaders([
             'X-API-KEY' => $apiKey->api_key,
-        ])->postJson('/api/screen', $this->getValidScreeningData());
+        ])->postJson('/api/v1/screen', $this->getValidScreeningData());
 
         $data = $response->json('data');
 
@@ -102,7 +102,7 @@ class GlairAIAsyncFlowTest extends TestCase
 
         $this->withHeaders([
             'X-API-KEY' => $apiKey->api_key,
-        ])->postJson('/api/screen', $this->getValidScreeningData());
+        ])->postJson('/api/v1/screen', $this->getValidScreeningData());
 
         // Verify the new async job is dispatched
         Queue::assertPushed(GlairAIVerificationJob::class);

@@ -59,6 +59,7 @@ class ScreenRequest extends FormRequest
             'meta.service_provider' => ['required', 'in:' . implode(',', KycServiceTypeEnum::values())],
             'meta.reference_id' => ['required',],
             'meta.status' => ['nullable', Rule::enum(KycStatuseEnum::class)],
+            'meta.test' => ['nullable', 'boolean'],
         ];
     }
 }

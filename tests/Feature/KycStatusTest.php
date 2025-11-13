@@ -11,7 +11,6 @@ use Tests\TestCase;
 
 class KycStatusTest extends TestCase
 {
-    use RefreshDatabase;
 
     public function test_status_endpoint_returns_profile_data(): void
     {
@@ -25,7 +24,7 @@ class KycStatusTest extends TestCase
 
         $response = $this->withHeaders([
             'X-API-KEY' => $apiKey->api_key,
-        ])->getJson("/api/status/{$profile->id}");
+        ])->getJson("/api/v1/status/{$profile->id}");
 
         $response->assertOk()
             ->assertJson([
@@ -59,7 +58,7 @@ class KycStatusTest extends TestCase
 
         $response = $this->withHeaders([
             'X-API-KEY' => $apiKey->api_key,
-        ])->getJson('/api/status/nonexistent-uuid');
+        ])->getJson('/api/v1/status/nonexistent-uuid');
 
         $response->assertNotFound()
             ->assertJson([
@@ -82,7 +81,7 @@ class KycStatusTest extends TestCase
 
         $response = $this->withHeaders([
             'X-API-KEY' => $apiKey->api_key,
-        ])->getJson("/api/status/{$profile->id}");
+        ])->getJson("/api/v1/status/{$profile->id}");
 
         $response->assertOk()
             ->assertJson([
@@ -106,7 +105,7 @@ class KycStatusTest extends TestCase
             'user_api_key_id' => $apiKey->id,
         ]);
 
-        $response = $this->getJson("/api/status/{$profile->id}");
+        $response = $this->getJson("/api/v1/status/{$profile->id}");
 
         $response->assertUnauthorized();
     }
@@ -122,7 +121,7 @@ class KycStatusTest extends TestCase
 
         $response = $this->withHeaders([
             'X-API-KEY' => 'invalid-key',
-        ])->getJson("/api/status/{$profile->id}");
+        ])->getJson("/api/v1/status/{$profile->id}");
 
         $response->assertUnauthorized();
     }
@@ -138,7 +137,7 @@ class KycStatusTest extends TestCase
 
         $response = $this->withHeaders([
             'X-API-KEY' => $apiKey->api_key,
-        ])->getJson("/api/status/{$profile->id}");
+        ])->getJson("/api/v1/status/{$profile->id}");
 
         $response->assertOk()
             ->assertJson([
@@ -162,7 +161,7 @@ class KycStatusTest extends TestCase
 
         $response = $this->withHeaders([
             'X-API-KEY' => $apiKey->api_key,
-        ])->getJson("/api/status/{$profile->id}");
+        ])->getJson("/api/v1/status/{$profile->id}");
 
         $response->assertOk()
             ->assertJson([

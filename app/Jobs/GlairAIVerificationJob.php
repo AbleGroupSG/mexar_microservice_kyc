@@ -18,6 +18,21 @@ class GlairAIVerificationJob implements ShouldQueue
     use Queueable;
 
     /**
+     * The number of times the job may be attempted.
+     */
+    public int $tries = 3;
+
+    /**
+     * The maximum number of unhandled exceptions to allow before failing.
+     */
+    public int $maxExceptions = 3;
+
+    /**
+     * The number of seconds to wait before retrying the job.
+     */
+    public int $backoff = 60;
+
+    /**
      * Create a new job instance.
      */
     public function __construct(
@@ -50,7 +65,7 @@ class GlairAIVerificationJob implements ShouldQueue
             $profile->status = $boolStatus ? KycStatuseEnum::APPROVED : KycStatuseEnum::REJECTED;
             $profile->save();
 
-            // Send webhook to client's configured webhook URL
+            // Send webhook to the configured webhook URL
             if ($profile->apiKey && $profile->apiKey->webhook_url) {
                 $this->sendWebhook($profile);
             } else {
@@ -87,7 +102,7 @@ class GlairAIVerificationJob implements ShouldQueue
             'event' => 'kyc.status.changed',
             'payload' => [
                 'msa_reference_id' => $profile->id,
-                'provider_reference_id' => $profile->id,
+                'provider_reference_id' => $profile->provider_reference_id,
                 'reference_id' => $this->userDataDTO->meta->reference_id,
                 'platform' => KycServiceTypeEnum::GLAIR_AI,
                 'status' => $profile->status,
@@ -124,6 +139,54 @@ class GlairAIVerificationJob implements ShouldQueue
                 'profile_id' => $profile->id,
                 'webhook_url' => $webhookUrl,
             ]);
+        }
+    }
+
+    /**
+     * Handle a job failure after all retry attempts exhausted.
+     *
+     * This method is called when the job has permanently failed after all retry
+     * attempts. It ensures the profile is marked as ERROR and a webhook is sent
+     * to notify the client of the failure.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('GlairAI verification job permanently failed', [
+            'profile_id' => $this->profileId,
+            'error' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString(),
+        ]);
+
+        $profile = KYCProfile::query()
+            ->with(['apiKey', 'user'])
+            ->find($this->profileId);
+
+        if (!$profile) {
+            Log::error('Cannot update profile - profile not found', [
+                'profile_id' => $this->profileId,
+            ]);
+            return;
+        }
+
+        // Update profile to ERROR status
+        $profile->status = KycStatuseEnum::ERROR;
+        $profile->provider_response_data = [
+            'error' => $exception->getMessage(),
+            'failed_at' => now()->toIso8601String(),
+            'attempts' => $this->attempts(),
+        ];
+        $profile->save();
+
+        // Send error webhook to client
+        if ($profile->apiKey && $profile->apiKey->webhook_url) {
+            try {
+                $this->sendWebhook($profile, 'Verification failed after ' . $this->attempts() . ' attempts: ' . $exception->getMessage());
+            } catch (\Throwable $webhookError) {
+                Log::error('Failed to send error webhook after job failure', [
+                    'profile_id' => $this->profileId,
+                    'webhook_error' => $webhookError->getMessage(),
+                ]);
+            }
         }
     }
 }

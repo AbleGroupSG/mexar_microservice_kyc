@@ -145,12 +145,12 @@ All KYC screening operations follow a consistent async pattern:
 #### RegTank Flow
 
 ```
-POST /api/screen → [Create Profile: PENDING] → Call RegTank API
-                                                      ↓
-Client receives: { "identity": "uuid-123" }    Store reference_id
-                                                      ↓
-                                               ⏳ Wait for webhook
-                                                      ↓
+POST /api/v1/screen → [Create Profile: PENDING] → Call RegTank API
+                                                         ↓
+Client receives: { "identity": "uuid-123" }       Store reference_id
+                                                         ↓
+                                                  ⏳ Wait for webhook
+                                                         ↓
 POST /webhooks/kyc ← RegTank sends result ← [Update Profile: APPROVED/REJECTED]
          ↓
 [Send to client's webhook_url] → Client receives notification
@@ -159,22 +159,25 @@ POST /webhooks/kyc ← RegTank sends result ← [Update Profile: APPROVED/REJECT
 #### GlairAI Flow
 
 ```
-POST /api/screen → [Create Profile: PENDING] → Dispatch GlairAIVerificationJob
-                            ↓
+POST /api/v1/screen → [Create Profile: PENDING] → Dispatch GlairAIVerificationJob
+                               ↓
 Client receives: { "identity": "uuid-456" }
-                                                      ↓
-                                               Job calls GlairAI API
-                                                      ↓
-                                        [Update Profile: APPROVED/REJECTED]
-                                                      ↓
-                                        [Send to client's webhook_url]
+                                                         ↓
+                                                  Job calls GlairAI API
+                                                         ↓
+                                           [Update Profile: APPROVED/REJECTED]
+                                                         ↓
+                                           [Send to client's webhook_url]
+
+Note: Jobs include retry logic (3 attempts) and automatic error handling.
+If all retries fail, profile is marked as ERROR and error webhook is sent.
 ```
 
 ## API Workflow
 
 ### 1. Submit KYC Screening Request
 
-**Endpoint:** `POST /api/screen`
+**Endpoint:** `POST /api/v1/screen`
 
 **Headers:**
 ```
@@ -256,12 +259,14 @@ Content-Type: application/json
 
 ### 2. Poll Status (Optional)
 
-**Endpoint:** `GET /api/status/{uuid}`
+**Endpoint:** `GET /api/v1/status/{uuid}`
 
 **Headers:**
 ```
 X-API-KEY: your-api-key-here
 ```
+
+**Security Note:** This endpoint is scoped to the authenticated API key. You can only query profiles created with your own API key.
 
 **Response (Pending):**
 ```json
@@ -360,12 +365,87 @@ When screening completes, the MSA sends a webhook to the `webhook_url` configure
     "verified": false,
     "verified_at": null,
     "rejected_at": null,
-    "message": "Invalid request",
+    "message": "Verification failed after 3 attempts: Connection timeout",
     "review_notes": null,
     "failure_reason": "Provider API error"
   }
 }
 ```
+
+## Error Handling
+
+### HTTP Status Codes
+
+| Status Code | Description | When It Occurs |
+|-------------|-------------|----------------|
+| `200` | Success | Request completed successfully |
+| `401` | Unauthorized | Missing or invalid API key |
+| `404` | Not Found | Profile UUID not found or doesn't belong to your API key |
+| `422` | Validation Error | Invalid request data (missing required fields, wrong format) |
+| `500` | Internal Server Error | Unexpected server error |
+| `503` | Service Unavailable | Cannot connect to verification provider |
+
+### Error Response Format
+
+All errors follow a consistent format:
+
+```json
+{
+  "meta": {
+    "code": 422,
+    "message": "Validation failed",
+    "request_id": "req-uuid-123"
+  },
+  "errors": {
+    "personal_info.nationality": [
+      "The personal info.nationality field is required."
+    ]
+  }
+}
+```
+
+### Provider Connection Errors
+
+When the service cannot connect to the verification provider (HTTP 503):
+
+```json
+{
+  "meta": {
+    "code": 503,
+    "message": "Provider connection failed",
+    "request_id": "req-uuid-456"
+  },
+  "errors": {
+    "error": "Unable to connect to verification provider. Please try again later."
+  }
+}
+```
+
+**Automatic Retry Strategy:**
+- The service automatically retries failed jobs **3 times** with exponential backoff
+- **GlairAI**: 60-second intervals between retries
+- **Test Service**: 30-second intervals between retries
+- After all retries fail, the profile is marked as `ERROR` status
+- An error webhook is automatically sent to your webhook URL with failure details
+
+### Authorization Errors
+
+Attempting to access a profile that doesn't belong to your API key (HTTP 404):
+
+```json
+{
+  "meta": {
+    "code": 404,
+    "message": "Profile not found",
+    "request_id": "req-uuid-789"
+  },
+  "errors": {
+    "error": "Profile not found"
+  }
+}
+```
+
+**Security Note:** The status endpoint is scoped to your API key. You cannot query profiles created by other API keys, even if you know the UUID.
 
 ## Installation
 
@@ -488,20 +568,27 @@ php artisan mexar:create-user
 All API requests require an API key passed in the `X-API-KEY` header:
 
 ```bash
-curl -X POST https://kyc-msa.example.com/api/screen \
+curl -X POST https://kyc-msa.example.com/api/v1/screen \
   -H "X-API-KEY: your-api-key-here" \
   -H "Content-Type: application/json" \
   -d '{ ... }'
 ```
 
+**Security Features:**
+- API key authentication via `X-API-KEY` header
+- Profile access is scoped to the authenticated API key
+- Soft-delete support for key rotation without losing history
+
 ### Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/screen` | Submit KYC screening request |
-| `GET` | `/api/status/{uuid}` | Get screening status |
-| `POST` | `/api/e-form-kyb` | Submit KYB screening (company) |
-| `POST` | `/api/v1/ocr` | Process OCR for KTP/Passport |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/api/v1/screen` | Submit KYC screening request | X-API-KEY |
+| `GET` | `/api/v1/status/{uuid}` | Get screening status (scoped to your API key) | X-API-KEY |
+| `POST` | `/api/v1/e-form-kyb` | Submit KYB screening (company) | X-API-KEY |
+| `POST` | `/api/v1/e-form-onboarding` | Submit entity onboarding check | X-API-KEY |
+| `GET` | `/api/v1/providers` | List available KYC providers | Public |
+| `POST` | `/api/v1/ocr` | Process OCR for KTP/Passport | JWT Token |
 
 ### Webhook Endpoints (Incoming)
 
@@ -540,18 +627,23 @@ php artisan test --filter=KycStatusTest
 # GlairAI async flow tests
 php artisan test --filter=GlairAIAsyncFlowTest
 
+# Test service async flow
+php artisan test --filter=TestServiceAsyncFlowTest
+
 # Feature tests only
 php artisan test --testsuite=Feature
 ```
 
 ### Test Coverage
 
-- ✅ Status polling endpoint
+- ✅ Status polling endpoint with authorization
 - ✅ Multi-API-key authentication
-- ✅ Async workflow for all providers
-- ✅ Webhook notifications
-- ✅ Error handling
-- ✅ Job processing
+- ✅ Async workflow for all providers (RegTank, GlairAI, Test)
+- ✅ Webhook notifications to client webhook URLs
+- ✅ Error handling and proper HTTP status codes
+- ✅ Job processing with retry logic
+- ✅ Job failure handling and error webhooks
+- ✅ Profile access scoped to API key owner
 
 ## Development
 
@@ -614,6 +706,8 @@ All KYC providers operate asynchronously in production:
 - **RegTank**: Takes minutes to hours, uses webhooks
 - **GlairAI**: Real-time API but processed in background jobs for consistency
 - **Consistency**: Same client experience regardless of provider
+- **Reliability**: Built-in retry logic (3 attempts with exponential backoff)
+- **Error handling**: Automatic error webhooks on permanent failures
 
 ### Why Multi-API-Key Architecture?
 
@@ -621,12 +715,21 @@ All KYC providers operate asynchronously in production:
 - **Webhook flexibility**: Each key can have its own webhook URL
 - **Security**: Keys can be rotated independently
 - **Soft delete**: Keys can be disabled without losing history
+- **Isolation**: Each API key's data is isolated from others
 
 ### Why Service Factory Pattern?
 
 - **Testability**: Easy to mock providers in tests
 - **Extensibility**: Add new providers by implementing `KYCServiceInterface`
 - **Dependency Injection**: Leverage Laravel's container for dependencies
+
+### Security Features
+
+- **API Key Scoping**: Users can only access profiles created with their own API keys
+- **Connection Error Handling**: Proper HTTP 503 responses for provider connection failures
+- **Job Retry Logic**: Automatic retries with exponential backoff for transient failures
+- **Error Webhooks**: Clients receive notifications even when verification fails
+- **Audit Logging**: All API requests and webhooks are logged for audit trails
 
 ## Contributing
 

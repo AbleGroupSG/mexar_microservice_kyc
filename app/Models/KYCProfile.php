@@ -42,6 +42,7 @@ class KYCProfile extends Model
     protected $casts = [
         'id' => 'string',
         'profile_data' => 'array',
+        'provider_response_data' => 'array',
         'status' => KycStatuseEnum::class,
     ];
 

@@ -9,6 +9,7 @@ use App\Models\KYCProfile;
 use App\Services\KYC\KYCServiceFactory;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Knuckles\Scribe\Attributes\BodyParam;
 use Knuckles\Scribe\Attributes\Endpoint;
@@ -169,13 +170,30 @@ class KYCScreenController extends APIController
         try {
             $response = $service->screen($data, $user, $userApiKey);
             return $this->respondWithWrapper($response, 'Screening successful');
-        } catch (HttpException|ConnectionException $e) {
+        } catch (HttpException $e) {
             return $this->respondWithError([
                 'error' => $e->getMessage(),
-            ], $e->getStatusCode() ?? Response::HTTP_BAD_REQUEST, 'Screening failed');
-        } catch (\Throwable $e) {
+            ], $e->getStatusCode(), 'Screening failed');
+        } catch (ConnectionException $e) {
+            logger()->error('Provider connection failed', [
+                'uuid' => $uuid,
+                'user_id' => $user->id,
+                'service_provider' => $serviceProvider,
+                'error' => $e->getMessage(),
+            ]);
             return $this->respondWithError([
-                'error' => 'An internal error happened',
+                'error' => 'Unable to connect to verification provider. Please try again later.',
+            ], Response::HTTP_SERVICE_UNAVAILABLE, 'Provider connection failed');
+        } catch (\Throwable $e) {
+            logger()->error('Unexpected screening error', [
+                'uuid' => $uuid,
+                'user_id' => $user->id,
+                'service_provider' => $serviceProvider,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return $this->respondWithError([
+                'error' => 'An internal error occurred',
             ], Response::HTTP_INTERNAL_SERVER_ERROR, 'Screening failed');
         }
     }
@@ -273,11 +291,18 @@ class KYCScreenController extends APIController
      * - Alternatively, wait for webhook notification (recommended)
      *
      * @param string $uuid The UUID of the KYC profile
+     * @param Request $request The request instance with authenticated user
      * @return JsonResponse Profile status details or error
      */
-    public function status(string $uuid): JsonResponse
+    public function status(string $uuid, Request $request): JsonResponse
     {
-        $profile = KYCProfile::find($uuid);
+        // Get the authenticated API key to ensure users can only access their own profiles
+        $userApiKey = $request->attributes->get('user_api_key');
+
+        // Scope query to profiles owned by the authenticated API key
+        $profile = KYCProfile::where('id', $uuid)
+            ->where('user_api_key_id', $userApiKey->id)
+            ->first();
 
         if (!$profile) {
             return $this->respondWithError(

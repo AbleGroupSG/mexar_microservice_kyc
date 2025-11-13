@@ -12,7 +12,6 @@ use App\Models\CompanyKyb;
 use App\Models\KYCProfile;
 use App\Models\WebhookLog;
 use App\Services\EFormAppService;
-use App\Services\MexarAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +21,6 @@ use Throwable;
 class RegtankWebhookController extends Controller
 {
     public function __construct(
-        protected MexarAppService $mexarAppService,
         protected EFormAppService $EFormAppService,
     ) {}
 
@@ -41,7 +39,6 @@ class RegtankWebhookController extends Controller
             $profile->provider_response_data = $data;
             $profile->status = $status;
             $profile->save();
-
             // Send webhook to the configured webhook URL for this API key
             if ($profile->apiKey && $profile->apiKey->webhook_url) {
                 $this->sendWebhook($profile, $dto, $status);
@@ -53,6 +50,43 @@ class RegtankWebhookController extends Controller
             }
         } else {
             Log::error('KYC profile not found', ['provider_reference_id' => $dto->requestId]);
+        }
+
+        return response()->json(['status' => true], Response::HTTP_OK);
+    }
+
+    private function resolveStatus(string $status): KycStatuseEnum
+    {
+        return match ($status) {
+            'Approved' => KycStatuseEnum::APPROVED,
+            'Rejected', 'Unresolved', 'No Match', 'Positive Match' => KycStatuseEnum::REJECTED,
+            default => KycStatuseEnum::UNRESOLVED,
+        };
+    }
+
+    public function djkyb(): JsonResponse
+    {
+        $data = request()->all();
+        WebhookLog::saveRequest(WebhookLog::REGTANK, WebhookTypeEnum::fromString('djkyb'), $data);
+
+        try {
+            $this->EFormAppService->sendDjkyb($data);
+        }catch (Throwable $e) {
+            logger()->error('CompanyKyb not found', ['request_id' => $data['requestId']]);
+        }
+
+        return response()->json(['status' => true], Response::HTTP_OK);
+    }
+
+    public function liveness(): JsonResponse
+    {
+        $data = request()->all();
+        WebhookLog::saveRequest(WebhookLog::REGTANK, WebhookTypeEnum::fromString('liveness'), $data);
+
+        try {
+            $this->EFormAppService->sendLiveness($data);
+        }catch (Throwable $e) {
+            logger()->error('CompanyKyb not found', ['request_id' => $data['requestId']]);
         }
 
         return response()->json(['status' => true], Response::HTTP_OK);
@@ -100,42 +134,5 @@ class RegtankWebhookController extends Controller
                 'webhook_url' => $webhookUrl,
             ]);
         }
-    }
-
-    private function resolveStatus(string $status): KycStatuseEnum
-    {
-        return match ($status) {
-            'Approved' => KycStatuseEnum::APPROVED,
-            'Rejected', 'Unresolved', 'No Match', 'Positive Match' => KycStatuseEnum::REJECTED,
-            default => KycStatuseEnum::UNRESOLVED,
-        };
-    }
-
-    public function djkyb(): JsonResponse
-    {
-        $data = request()->all();
-        WebhookLog::saveRequest(WebhookLog::REGTANK, WebhookTypeEnum::fromString('djkyb'), $data);
-
-        try {
-            $this->EFormAppService->sendDjkyb($data);
-        }catch (Throwable $e) {
-            logger()->error('CompanyKyb not found', ['request_id' => $data['requestId']]);
-        }
-
-        return response()->json(['status' => true], Response::HTTP_OK);
-    }
-
-    public function liveness(): JsonResponse
-    {
-        $data = request()->all();
-        WebhookLog::saveRequest(WebhookLog::REGTANK, WebhookTypeEnum::fromString('liveness'), $data);
-
-        try {
-            $this->EFormAppService->sendLiveness($data);
-        }catch (Throwable $e) {
-            logger()->error('CompanyKyb not found', ['request_id' => $data['requestId']]);
-        }
-
-        return response()->json(['status' => true], Response::HTTP_OK);
     }
 }
