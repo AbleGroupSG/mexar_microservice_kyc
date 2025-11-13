@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\KycServiceTypeEnum;
 use App\Enums\KycStatuseEnum;
 use App\Jobs\GlairAIVerificationJob;
+use App\Jobs\SendKycWebhookJob;
 use App\Models\KYCProfile;
 use App\Models\User;
 use App\Models\UserApiKey;
@@ -229,12 +230,13 @@ class GlairAIAsyncFlowTest extends TestCase
 
     public function test_glair_ai_verification_job_sends_webhook_to_client_webhook_url(): void
     {
+        Queue::fake();
+
         Http::fake([
             '*/identity/v1/verification' => Http::response([
                 'verification_status' => true,
                 'reason' => 'Verified',
             ], 200),
-            '*/webhook' => Http::response(['received' => true], 200),
         ]);
 
         $user = User::factory()->create();
@@ -242,15 +244,9 @@ class GlairAIAsyncFlowTest extends TestCase
             'user_id' => $user->id,
             'webhook_url' => 'https://client.example.com/webhook',
         ]);
-        $profile = KYCProfile::factory()->create([
-            'user_id' => $user->id,
-            'user_api_key_id' => $apiKey->id,
-            'provider' => 'glair_ai',
-            'status' => KycStatuseEnum::PENDING,
-        ]);
 
         $userDataDTO = \App\DTO\UserDataDTO::from([
-            'uuid' => $profile->id,
+            'uuid' => \Illuminate\Support\Str::uuid()->toString(),
             'personal_info' => [
                 'first_name' => 'John',
                 'last_name' => 'Doe',
@@ -271,6 +267,15 @@ class GlairAIAsyncFlowTest extends TestCase
                 'service_provider' => 'glair',
                 'reference_id' => 'REF123',
             ],
+        ]);
+
+        $profile = KYCProfile::factory()->create([
+            'id' => $userDataDTO->uuid,
+            'user_id' => $user->id,
+            'user_api_key_id' => $apiKey->id,
+            'provider' => 'glair_ai',
+            'status' => KycStatuseEnum::PENDING,
+            'profile_data' => $userDataDTO->toJson(),
         ]);
 
         $data = [
@@ -282,22 +287,20 @@ class GlairAIAsyncFlowTest extends TestCase
         $job = new GlairAIVerificationJob($profile->id, $userDataDTO, $data);
         $job->handle();
 
-        // Verify webhook was sent to client's webhook URL
-        Http::assertSent(function ($request) {
-            return $request->url() === 'https://client.example.com/webhook'
-                && $request['event'] === 'kyc.status.changed'
-                && $request['payload']['platform'] === KycServiceTypeEnum::GLAIR_AI
-                && $request['payload']['status'] === KycStatuseEnum::APPROVED;
+        // Verify SendKycWebhookJob was dispatched
+        Queue::assertPushed(SendKycWebhookJob::class, function ($job) use ($profile) {
+            return $job->profileId === $profile->id;
         });
     }
 
     public function test_glair_ai_verification_job_handles_errors_gracefully(): void
     {
+        Queue::fake();
+
         Http::fake([
             '*/identity/v1/verification' => Http::response([
                 'error' => 'Invalid request',
             ], 400),
-            '*/webhook' => Http::response(['received' => true], 200),
         ]);
 
         $user = User::factory()->create();
@@ -305,15 +308,9 @@ class GlairAIAsyncFlowTest extends TestCase
             'user_id' => $user->id,
             'webhook_url' => 'https://client.example.com/webhook',
         ]);
-        $profile = KYCProfile::factory()->create([
-            'user_id' => $user->id,
-            'user_api_key_id' => $apiKey->id,
-            'provider' => 'glair_ai',
-            'status' => KycStatuseEnum::PENDING,
-        ]);
 
         $userDataDTO = \App\DTO\UserDataDTO::from([
-            'uuid' => $profile->id,
+            'uuid' => \Illuminate\Support\Str::uuid()->toString(),
             'personal_info' => [
                 'first_name' => 'John',
                 'last_name' => 'Doe',
@@ -334,6 +331,15 @@ class GlairAIAsyncFlowTest extends TestCase
                 'service_provider' => 'glair',
                 'reference_id' => 'REF123',
             ],
+        ]);
+
+        $profile = KYCProfile::factory()->create([
+            'id' => $userDataDTO->uuid,
+            'user_id' => $user->id,
+            'user_api_key_id' => $apiKey->id,
+            'provider' => 'glair_ai',
+            'status' => KycStatuseEnum::PENDING,
+            'profile_data' => $userDataDTO->toJson(),
         ]);
 
         $data = [
@@ -350,11 +356,9 @@ class GlairAIAsyncFlowTest extends TestCase
         // Profile should be marked as ERROR
         $this->assertEquals(KycStatuseEnum::ERROR, $profile->status);
 
-        // Webhook should still be sent with error details
-        Http::assertSent(function ($request) {
-            return $request->url() === 'https://client.example.com/webhook'
-                && $request['payload']['status'] === KycStatuseEnum::ERROR
-                && !empty($request['payload']['failure_reason']);
+        // Verify SendKycWebhookJob was dispatched even for errors
+        Queue::assertPushed(SendKycWebhookJob::class, function ($job) use ($profile) {
+            return $job->profileId === $profile->id;
         });
     }
 

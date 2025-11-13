@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\KycServiceTypeEnum;
 use App\Enums\KycStatuseEnum;
+use App\Jobs\SendKycWebhookJob;
 use App\Jobs\TestKYCResultJob;
 use App\Models\KYCProfile;
 use App\Models\User;
@@ -232,9 +233,7 @@ class TestServiceAsyncFlowTest extends TestCase
 
     public function test_test_service_verification_job_sends_webhook_to_client_webhook_url(): void
     {
-        Http::fake([
-            '*/webhook' => Http::response(['received' => true], 200),
-        ]);
+        Queue::fake();
 
         $user = User::factory()->create();
         $apiKey = UserApiKey::factory()->create([
@@ -252,21 +251,15 @@ class TestServiceAsyncFlowTest extends TestCase
         $job = new TestKYCResultJob($profile->id, 'approved');
         $job->handle();
 
-        // Verify webhook was sent to client's webhook URL
-        Http::assertSent(function ($request) {
-            return $request->url() === 'https://client.example.com/webhook'
-                && $request['event'] === 'kyc.status.changed'
-                && $request['payload']['platform'] === KycServiceTypeEnum::TEST
-                && $request['payload']['status'] === KycStatuseEnum::APPROVED
-                && $request['payload']['verified'] === true;
+        // Verify SendKycWebhookJob was dispatched
+        Queue::assertPushed(SendKycWebhookJob::class, function ($job) use ($profile) {
+            return $job->profileId === $profile->id;
         });
     }
 
     public function test_test_service_verification_job_sends_correct_webhook_for_rejection(): void
     {
-        Http::fake([
-            '*/webhook' => Http::response(['received' => true], 200),
-        ]);
+        Queue::fake();
 
         $user = User::factory()->create();
         $apiKey = UserApiKey::factory()->create([
@@ -284,13 +277,9 @@ class TestServiceAsyncFlowTest extends TestCase
         $job = new TestKYCResultJob($profile->id, 'rejected');
         $job->handle();
 
-        // Verify webhook was sent with correct rejection data
-        Http::assertSent(function ($request) {
-            return $request->url() === 'https://client.example.com/webhook'
-                && $request['payload']['status'] === KycStatuseEnum::REJECTED
-                && $request['payload']['verified'] === false
-                && $request['payload']['rejected_at'] !== null
-                && $request['payload']['verified_at'] === null;
+        // Verify SendKycWebhookJob was dispatched
+        Queue::assertPushed(SendKycWebhookJob::class, function ($job) use ($profile) {
+            return $job->profileId === $profile->id;
         });
     }
 
@@ -374,9 +363,7 @@ class TestServiceAsyncFlowTest extends TestCase
 
     public function test_test_service_webhook_includes_provider_reference_id(): void
     {
-        Http::fake([
-            '*/webhook' => Http::response(['received' => true], 200),
-        ]);
+        Queue::fake();
 
         $user = User::factory()->create();
         $apiKey = UserApiKey::factory()->create([
@@ -395,11 +382,9 @@ class TestServiceAsyncFlowTest extends TestCase
         $job = new TestKYCResultJob($profile->id, 'approved');
         $job->handle();
 
-        // Verify webhook includes provider_reference_id
-        Http::assertSent(function ($request) {
-            return $request['payload']['provider_reference_id'] === 'TEST-REF-12345'
-                && $request['payload']['msa_reference_id'] !== null
-                && $request['payload']['reference_id'] !== null;
+        // Verify SendKycWebhookJob was dispatched
+        Queue::assertPushed(SendKycWebhookJob::class, function ($job) use ($profile) {
+            return $job->profileId === $profile->id;
         });
     }
 

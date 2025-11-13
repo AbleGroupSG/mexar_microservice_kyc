@@ -8,6 +8,7 @@ use App\Enums\KycServiceTypeEnum;
 use App\Enums\KycStatuseEnum;
 use App\Enums\WebhookTypeEnum;
 use App\Http\Controllers\Controller;
+use App\Jobs\SendKycWebhookJob;
 use App\Models\CompanyKyb;
 use App\Models\KYCProfile;
 use App\Models\WebhookLog;
@@ -39,15 +40,18 @@ class RegtankWebhookController extends Controller
             $profile->provider_response_data = $data;
             $profile->status = $status;
             $profile->save();
-            // Send webhook to the configured webhook URL for this API key
-            if ($profile->apiKey && $profile->apiKey->webhook_url) {
-                $this->sendWebhook($profile, $dto, $status);
-            } else {
-                Log::warning('No webhook URL configured for API key', [
-                    'profile_id' => $profile->id,
-                    'user_api_key_id' => $profile->user_api_key_id,
-                ]);
-            }
+
+            // Dispatch async job to send webhook to client's configured webhook URL
+            SendKycWebhookJob::dispatch(
+                profileId: $profile->id,
+                additionalData: [
+                    'provider_data' => [
+                        'status' => $dto->status,
+                        'riskLevel' => $dto->riskLevel,
+                        'timestamp' => $dto->timestamp,
+                    ],
+                ]
+            );
         } else {
             Log::error('KYC profile not found', ['provider_reference_id' => $dto->requestId]);
         }
@@ -90,49 +94,5 @@ class RegtankWebhookController extends Controller
         }
 
         return response()->json(['status' => true], Response::HTTP_OK);
-    }
-
-    private function sendWebhook(KYCProfile $profile, KycDTO $dto, KycStatuseEnum $status): void
-    {
-        $webhookUrl = $profile->apiKey->webhook_url;
-
-        $payload = [
-            'event' => 'kyc.status.changed',
-            'payload' => [
-                'msa_reference_id' => $profile->id,
-                'provider_reference_id' => $profile->provider_reference_id,
-                'reference_id' => $dto->referenceId,
-                'platform' => KycServiceTypeEnum::REGTANK,
-                'status' => $status,
-                'verified' => $status === KycStatuseEnum::APPROVED,
-                'verified_at' => $status === KycStatuseEnum::APPROVED ? $dto->timestamp : null,
-                'rejected_at' => $status === KycStatuseEnum::REJECTED ? $dto->timestamp : null,
-                'message' => 'KYC verification completed risk level: ' . $dto->riskLevel,
-                'review_notes' => $dto->status,
-                'failure_reason' => $status == KycStatuseEnum::REJECTED ? $dto->status : null,
-            ],
-        ];
-
-        Log::info('Sending KYC webhook', [
-            'profile_id' => $profile->id,
-            'webhook_url' => $webhookUrl,
-            'status' => $status->value,
-        ]);
-
-        $response = Http::post($webhookUrl, $payload);
-
-        if (!$response->successful()) {
-            Log::error('Failed to send KYC webhook', [
-                'profile_id' => $profile->id,
-                'webhook_url' => $webhookUrl,
-                'status_code' => $response->status(),
-                'response' => $response->body(),
-            ]);
-        } else {
-            Log::info('KYC webhook sent successfully', [
-                'profile_id' => $profile->id,
-                'webhook_url' => $webhookUrl,
-            ]);
-        }
     }
 }

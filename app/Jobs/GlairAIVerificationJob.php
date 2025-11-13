@@ -10,7 +10,6 @@ use App\Services\KYC\GlairAI\GlairAIService;
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class GlairAIVerificationJob implements ShouldQueue
@@ -65,15 +64,8 @@ class GlairAIVerificationJob implements ShouldQueue
             $profile->status = $boolStatus ? KycStatuseEnum::APPROVED : KycStatuseEnum::REJECTED;
             $profile->save();
 
-            // Send webhook to the configured webhook URL
-            if ($profile->apiKey && $profile->apiKey->webhook_url) {
-                $this->sendWebhook($profile);
-            } else {
-                Log::warning('No webhook URL configured for API key', [
-                    'profile_id' => $profile->id,
-                    'user_api_key_id' => $profile->user_api_key_id,
-                ]);
-            }
+            // Dispatch async job to send webhook to client's configured webhook URL
+            SendKycWebhookJob::dispatch($profile->id);
 
         } catch (Exception $e) {
             Log::error('GlairAI verification failed', [
@@ -84,61 +76,11 @@ class GlairAIVerificationJob implements ShouldQueue
             $profile->status = KycStatuseEnum::ERROR;
             $profile->save();
 
-            // Send error webhook if webhook URL is configured
-            if ($profile->apiKey && $profile->apiKey->webhook_url) {
-                $this->sendWebhook($profile, $e->getMessage());
-            }
-        }
-    }
-
-    /**
-     * Send webhook notification to client's webhook URL
-     */
-    private function sendWebhook(KYCProfile $profile, ?string $error = null): void
-    {
-        $webhookUrl = $profile->apiKey->webhook_url;
-
-        $payload = [
-            'event' => 'kyc.status.changed',
-            'payload' => [
-                'msa_reference_id' => $profile->id,
-                'provider_reference_id' => $profile->provider_reference_id,
-                'reference_id' => $this->userDataDTO->meta->reference_id,
-                'platform' => KycServiceTypeEnum::GLAIR_AI,
-                'status' => $profile->status,
-                'verified' => $profile->status === KycStatuseEnum::APPROVED,
-                'verified_at' => $profile->status === KycStatuseEnum::APPROVED
-                    ? $profile->updated_at
-                    : null,
-                'rejected_at' => $profile->status === KycStatuseEnum::REJECTED
-                    ? $profile->updated_at
-                    : null,
-                'message' => $error ?? 'KYC verification completed',
-                'review_notes' => $error ? null : 'GlairAI identity verification',
-                'failure_reason' => $error,
-            ],
-        ];
-
-        Log::info('Sending GlairAI KYC webhook', [
-            'profile_id' => $profile->id,
-            'webhook_url' => $webhookUrl,
-            'status' => $profile->status->value,
-        ]);
-
-        $response = Http::post($webhookUrl, $payload);
-
-        if (!$response->successful()) {
-            Log::error('Failed to send GlairAI KYC webhook', [
-                'profile_id' => $profile->id,
-                'webhook_url' => $webhookUrl,
-                'status_code' => $response->status(),
-                'response' => $response->body(),
-            ]);
-        } else {
-            Log::info('GlairAI KYC webhook sent successfully', [
-                'profile_id' => $profile->id,
-                'webhook_url' => $webhookUrl,
-            ]);
+            // Dispatch async job to send error webhook
+            SendKycWebhookJob::dispatch(
+                profileId: $profile->id,
+                additionalData: ['error' => $e->getMessage()]
+            );
         }
     }
 
@@ -177,16 +119,12 @@ class GlairAIVerificationJob implements ShouldQueue
         ];
         $profile->save();
 
-        // Send error webhook to client
-        if ($profile->apiKey && $profile->apiKey->webhook_url) {
-            try {
-                $this->sendWebhook($profile, 'Verification failed after ' . $this->attempts() . ' attempts: ' . $exception->getMessage());
-            } catch (\Throwable $webhookError) {
-                Log::error('Failed to send error webhook after job failure', [
-                    'profile_id' => $this->profileId,
-                    'webhook_error' => $webhookError->getMessage(),
-                ]);
-            }
-        }
+        // Dispatch async job to send error webhook to client
+        SendKycWebhookJob::dispatch(
+            profileId: $profile->id,
+            additionalData: [
+                'error' => 'Verification failed after ' . $this->attempts() . ' attempts: ' . $exception->getMessage()
+            ]
+        );
     }
 }
