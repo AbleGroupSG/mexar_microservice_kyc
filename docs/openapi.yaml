@@ -1,0 +1,1378 @@
+openapi: 3.0.3
+info:
+  title: 'MEXAR KYC MSA API Documentation'
+  description: ''
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost:8888'
+tags:
+  -
+    name: Endpoints
+    description: ''
+  -
+    name: 'Entity Onboarding'
+    description: ''
+  -
+    name: 'KYB Screening'
+    description: ''
+  -
+    name: 'KYC Screening'
+    description: ''
+  -
+    name: 'OCR Services'
+    description: ''
+  -
+    name: 'System Information'
+    description: ''
+paths:
+  /api/user:
+    get:
+      summary: ''
+      operationId: getApiUser
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Endpoints
+      security: []
+  /api/v1/e-form-onboarding:
+    post:
+      summary: 'Submit individual onboarding check'
+      operationId: submitIndividualOnboardingCheck
+      description: 'Performs compliance screening for individual entity onboarding using RegTank. This endpoint checks individuals against sanctions lists, PEP databases, and adverse media for customer due diligence and compliance purposes.'
+      parameters:
+        -
+          in: header
+          name: X-API-KEY
+          description: ''
+          example: 'Your API key for authentication'
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Onboarding screening request successfully submitted to RegTank'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 200
+                    message: 'Screening successful'
+                    request_id: 550e8400-e29b-41d4-a716-446655440020
+                  data:
+                    requestId: REG-789012
+                    status: pending
+                    email: john.doe@example.com
+                    name: 'John Doe'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 200
+                      message:
+                        type: string
+                        example: 'Screening successful'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440020
+                  data:
+                    type: object
+                    properties:
+                      requestId:
+                        type: string
+                        example: REG-789012
+                      status:
+                        type: string
+                        example: pending
+                      email:
+                        type: string
+                        example: john.doe@example.com
+                      name:
+                        type: string
+                        example: 'John Doe'
+        422:
+          description: 'Validation error - email is required and must be valid'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 422
+                    message: 'Validation failed'
+                    request_id: 550e8400-e29b-41d4-a716-446655440021
+                  errors:
+                    email:
+                      - 'The email field is required.'
+                      - 'The email must be a valid email address.'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 422
+                      message:
+                        type: string
+                        example: 'Validation failed'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440021
+                  errors:
+                    type: object
+                    properties:
+                      email:
+                        type: array
+                        example:
+                          - 'The email field is required.'
+                          - 'The email must be a valid email address.'
+                        items:
+                          type: string
+        500:
+          description: 'Provider error or internal server error'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 500
+                    message: 'Screening failed'
+                    request_id: 550e8400-e29b-41d4-a716-446655440022
+                  errors:
+                    error: 'RegTank API connection failed'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 500
+                      message:
+                        type: string
+                        example: 'Screening failed'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440022
+                  errors:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: 'RegTank API connection failed'
+      tags:
+        - 'Entity Onboarding'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Email address of the individual (required)'
+                  example: john.doe@example.com
+                  nullable: false
+                surname:
+                  type: string
+                  description: 'Surname/Last name of the individual'
+                  example: Doe
+                  nullable: false
+                forename:
+                  type: string
+                  description: 'Forename/First name of the individual'
+                  example: John
+                  nullable: false
+                countryOfResidence:
+                  type: string
+                  description: 'Country of residence (ISO 3166-1 alpha-2 code)'
+                  example: SG
+                  nullable: false
+                placeOfBirth:
+                  type: string
+                  description: 'Place of birth (city or country)'
+                  example: Singapore
+                  nullable: false
+                nationality:
+                  type: string
+                  description: 'Nationality (ISO 3166-1 alpha-2 code)'
+                  example: SG
+                  nullable: false
+                idIssuingCountry:
+                  type: string
+                  description: 'Country that issued the identification document (ISO 3166-1 alpha-2 code)'
+                  example: SG
+                  nullable: false
+                dateOfBirth:
+                  type: string
+                  description: 'Date of birth in YYYY-MM-DD format'
+                  example: '1985-03-15'
+                  nullable: false
+                gender:
+                  type: string
+                  description: 'Gender (Male, Female, or Other)'
+                  example: Male
+                  nullable: false
+              required:
+                - email
+      security: []
+  /api/v1/e-form-kyb:
+    post:
+      summary: 'Submit KYB screening request'
+      operationId: submitKYBScreeningRequest
+      description: "Initiates a KYB (Know Your Business) screening process for company verification using RegTank's Dow Jones database. This endpoint screens businesses against sanctions lists, adverse media, and politically exposed persons databases."
+      parameters:
+        -
+          in: header
+          name: X-API-KEY
+          description: ''
+          example: 'Your API key for authentication'
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'KYB screening request successfully submitted to RegTank'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 200
+                    message: 'Screening successful'
+                    request_id: 550e8400-e29b-41d4-a716-446655440010
+                  data:
+                    requestId: REG-123456
+                    status: pending
+                    businessName: 'Acme Corporation Ltd'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 200
+                      message:
+                        type: string
+                        example: 'Screening successful'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440010
+                  data:
+                    type: object
+                    properties:
+                      requestId:
+                        type: string
+                        example: REG-123456
+                      status:
+                        type: string
+                        example: pending
+                      businessName:
+                        type: string
+                        example: 'Acme Corporation Ltd'
+        400:
+          description: 'RegTank provider error'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 400
+                    message: 'Screening failed'
+                    request_id: 550e8400-e29b-41d4-a716-446655440012
+                  errors:
+                    error: 'Provider connection failed'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 400
+                      message:
+                        type: string
+                        example: 'Screening failed'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440012
+                  errors:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: 'Provider connection failed'
+        422:
+          description: 'Validation error - required fields missing'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 422
+                    message: 'Validation failed'
+                    request_id: 550e8400-e29b-41d4-a716-446655440011
+                  errors:
+                    referenceId:
+                      - 'The reference id field is required.'
+                    businessName:
+                      - 'The business name field is required.'
+                    businessIdNumber:
+                      - 'The business id number field is required.'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 422
+                      message:
+                        type: string
+                        example: 'Validation failed'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440011
+                  errors:
+                    type: object
+                    properties:
+                      referenceId:
+                        type: array
+                        example:
+                          - 'The reference id field is required.'
+                        items:
+                          type: string
+                      businessName:
+                        type: array
+                        example:
+                          - 'The business name field is required.'
+                        items:
+                          type: string
+                      businessIdNumber:
+                        type: array
+                        example:
+                          - 'The business id number field is required.'
+                        items:
+                          type: string
+        500:
+          description: 'Internal server error'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 500
+                    message: 'Screening failed'
+                    request_id: 550e8400-e29b-41d4-a716-446655440013
+                  errors:
+                    error: 'An internal error happened'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 500
+                      message:
+                        type: string
+                        example: 'Screening failed'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440013
+                  errors:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: 'An internal error happened'
+      tags:
+        - 'KYB Screening'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                referenceId:
+                  type: string
+                  description: 'Your internal reference ID for tracking this business screening request'
+                  example: COMPANY-REF-123
+                  nullable: false
+                businessName:
+                  type: string
+                  description: 'Legal name of the business entity'
+                  example: 'Acme Corporation Ltd'
+                  nullable: false
+                businessIdNumber:
+                  type: string
+                  description: 'Business registration or tax identification number'
+                  example: '123456789'
+                  nullable: false
+                address1:
+                  type: string
+                  description: 'Primary business address'
+                  example: '123 Business Street, Suite 100'
+                  nullable: false
+                email:
+                  type: string
+                  description: 'Business contact email address'
+                  example: contact@acme.com
+                  nullable: false
+                phone:
+                  type: string
+                  description: 'Business contact phone number'
+                  example: +1-555-0123
+                  nullable: false
+                website:
+                  type: string
+                  description: 'Business website URL'
+                  example: 'https://www.acme.com'
+                  nullable: false
+                dateOfIncorporation:
+                  type: string
+                  description: 'Date of business incorporation in YYYY-MM-DD format'
+                  example: '2010-05-15'
+                  nullable: false
+              required:
+                - referenceId
+                - businessName
+                - businessIdNumber
+      security: []
+  /api/v1/screen:
+    post:
+      summary: 'Submit KYC screening request'
+      operationId: submitKYCScreeningRequest
+      description: 'Initiates an asynchronous KYC (Know Your Customer) screening process. This endpoint creates a KYC profile with PENDING status and returns a reference ID immediately. The actual verification is processed asynchronously by the selected provider (RegTank or GlairAI). Once processing completes, a webhook notification will be sent to your configured webhook URL, and you can also poll the status endpoint.'
+      parameters:
+        -
+          in: header
+          name: X-API-KEY
+          description: ''
+          example: 'Your API key for authentication'
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'KYC screening request accepted. The identity field contains the UUID for status polling. Use GET /api/status/{uuid} to check the screening status, or wait for webhook notification to your configured webhook URL.'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 200
+                    message: 'Screening successful'
+                    request_id: 550e8400-e29b-41d4-a716-446655440000
+                  data:
+                    identity: 550e8400-e29b-41d4-a716-446655440000
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 200
+                      message:
+                        type: string
+                        example: 'Screening successful'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440000
+                  data:
+                    type: object
+                    properties:
+                      identity:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440000
+        400:
+          description: 'Provider error - the KYC provider returned an error or is unavailable'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 400
+                    message: 'Screening failed'
+                    request_id: 550e8400-e29b-41d4-a716-446655440003
+                  errors:
+                    error: 'Provider connection failed'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 400
+                      message:
+                        type: string
+                        example: 'Screening failed'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440003
+                  errors:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: 'Provider connection failed'
+        401:
+          description: 'Authentication failed - invalid or missing X-API-KEY header'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 401
+                    message: Unauthorized
+                    request_id: 550e8400-e29b-41d4-a716-446655440002
+                  errors:
+                    error: Unauthorized
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 401
+                      message:
+                        type: string
+                        example: Unauthorized
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440002
+                  errors:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: Unauthorized
+        422:
+          description: 'Validation error - required fields are missing or invalid'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 422
+                    message: 'Validation failed'
+                    request_id: 550e8400-e29b-41d4-a716-446655440001
+                  errors:
+                    personal_info.nationality:
+                      - 'The personal info.nationality field is required.'
+                    identification.id_type:
+                      - 'The identification.id type field is required.'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 422
+                      message:
+                        type: string
+                        example: 'Validation failed'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440001
+                  errors:
+                    type: object
+                    properties:
+                      personal_info.nationality:
+                        type: array
+                        example:
+                          - 'The personal info.nationality field is required.'
+                        items:
+                          type: string
+                      identification.id_type:
+                        type: array
+                        example:
+                          - 'The identification.id type field is required.'
+                        items:
+                          type: string
+        500:
+          description: 'Internal server error - an unexpected error occurred during processing'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 500
+                    message: 'Screening failed'
+                    request_id: 550e8400-e29b-41d4-a716-446655440004
+                  errors:
+                    error: 'An internal error happened'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 500
+                      message:
+                        type: string
+                        example: 'Screening failed'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440004
+                  errors:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: 'An internal error happened'
+      tags:
+        - 'KYC Screening'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                personal_info:
+                  type: object
+                  description: 'Personal information of the individual being screened'
+                  example: []
+                  nullable: false
+                  properties:
+                    first_name:
+                      type: string
+                      description: 'First name'
+                      example: John
+                      nullable: false
+                    last_name:
+                      type: string
+                      description: 'Last name'
+                      example: Doe
+                      nullable: false
+                    gender:
+                      type: string
+                      description: 'Gender (Male, Female, or Unspecified)'
+                      example: Male
+                      nullable: false
+                    date_of_birth:
+                      type: string
+                      description: 'Date of birth in YYYY-MM-DD format'
+                      example: '1990-01-15'
+                      nullable: false
+                    nationality:
+                      type: string
+                      description: 'ISO 3166-1 alpha-2 country code (2 letters)'
+                      example: ID
+                      nullable: false
+                  required:
+                    - first_name
+                    - last_name
+                    - nationality
+                identification:
+                  type: object
+                  description: 'Identification document information'
+                  example: []
+                  nullable: false
+                  properties:
+                    id_type:
+                      type: string
+                      description: 'Type of identification document (e.g., national_id, passport)'
+                      example: national_id
+                      nullable: false
+                    id_number:
+                      type: string
+                      description: 'Identification document number'
+                      example: '1234567890123456'
+                      nullable: false
+                    issuing_country:
+                      type: string
+                      description: 'ISO 3166-1 alpha-2 country code of issuing country'
+                      example: ID
+                      nullable: false
+                    issue_date:
+                      type: string
+                      description: 'Issue date in YYYY-MM-DD format'
+                      example: '2020-01-01'
+                      nullable: false
+                    expiry_date:
+                      type: string
+                      description: 'Expiry date in YYYY-MM-DD format (must be after issue_date)'
+                      example: '2030-01-01'
+                      nullable: false
+                  required:
+                    - id_type
+                    - id_number
+                    - issuing_country
+                address:
+                  type: object
+                  description: 'Address information'
+                  example: []
+                  nullable: false
+                  properties:
+                    street:
+                      type: string
+                      description: 'Street name'
+                      example: 'Jl. Sudirman'
+                      nullable: false
+                    city:
+                      type: string
+                      description: 'City name'
+                      example: Jakarta
+                      nullable: false
+                    state:
+                      type: string
+                      description: 'State or province'
+                      example: 'DKI Jakarta'
+                      nullable: false
+                    postal_code:
+                      type: string
+                      description: 'Postal or ZIP code'
+                      example: '12190'
+                      nullable: false
+                    country:
+                      type: string
+                      description: 'ISO 3166-1 alpha-2 country code'
+                      example: ID
+                      nullable: false
+                    address_line:
+                      type: string
+                      description: 'Full address line'
+                      example: 'Jl. Sudirman No. 123'
+                      nullable: false
+                  required:
+                    - city
+                    - country
+                    - address_line
+                contact:
+                  type: object
+                  description: 'Contact information'
+                  example: []
+                  nullable: false
+                  properties:
+                    email:
+                      type: string
+                      description: 'Email address'
+                      example: john.doe@example.com
+                      nullable: false
+                    phone:
+                      type: string
+                      description: 'Phone number'
+                      example: '+62812345678'
+                      nullable: false
+                meta:
+                  type: object
+                  description: 'Metadata for the screening request'
+                  example: []
+                  nullable: false
+                  properties:
+                    service_provider:
+                      type: string
+                      description: 'KYC service provider to use (regtank, glair, or test)'
+                      example: regtank
+                      nullable: false
+                    reference_id:
+                      type: string
+                      description: 'Your internal reference ID for tracking this request'
+                      example: YOUR-REF-123
+                      nullable: false
+                    status:
+                      type: string
+                      description: 'Optional status override (for internal use)'
+                      example: architecto
+                      nullable: false
+                    test:
+                      type: boolean
+                      description: ''
+                      example: false
+                      nullable: true
+                  required:
+                    - service_provider
+                    - reference_id
+              required:
+                - personal_info
+                - identification
+                - meta
+      security: []
+  '/api/v1/status/{uuid}':
+    get:
+      summary: 'Get KYC screening status'
+      operationId: getKYCScreeningStatus
+      description: "Retrieve the current status of a KYC screening request by UUID. Use this endpoint to poll for screening results after submitting a KYC request. The status will be 'pending' initially, then change to 'approved', 'rejected', or 'error' once the provider completes processing."
+      parameters:
+        -
+          in: header
+          name: X-API-KEY
+          description: ''
+          example: 'Your API key for authentication'
+          schema:
+            type: string
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  -
+                    description: 'Status retrieved successfully. Status values: pending (processing), approved (verified), rejected (failed verification), error (provider error)'
+                    type: object
+                    example:
+                      meta:
+                        code: 200
+                        message: 'Status retrieved successfully'
+                        request_id: 550e8400-e29b-41d4-a716-446655440005
+                      data:
+                        uuid: 550e8400-e29b-41d4-a716-446655440000
+                        status: pending
+                        provider: regtank
+                        provider_reference_id: REF123456
+                        created_at: '2025-01-15T10:30:00.000000Z'
+                        updated_at: '2025-01-15T10:30:00.000000Z'
+                    properties:
+                      meta:
+                        type: object
+                        properties:
+                          code:
+                            type: integer
+                            example: 200
+                          message:
+                            type: string
+                            example: 'Status retrieved successfully'
+                          request_id:
+                            type: string
+                            example: 550e8400-e29b-41d4-a716-446655440005
+                      data:
+                        type: object
+                        properties:
+                          uuid:
+                            type: string
+                            example: 550e8400-e29b-41d4-a716-446655440000
+                          status:
+                            type: string
+                            example: pending
+                          provider:
+                            type: string
+                            example: regtank
+                          provider_reference_id:
+                            type: string
+                            example: REF123456
+                          created_at:
+                            type: string
+                            example: '2025-01-15T10:30:00.000000Z'
+                          updated_at:
+                            type: string
+                            example: '2025-01-15T10:30:00.000000Z'
+                  -
+                    description: 'Example of approved status - verification passed'
+                    type: object
+                    example:
+                      meta:
+                        code: 200
+                        message: 'Status retrieved successfully'
+                        request_id: 550e8400-e29b-41d4-a716-446655440006
+                      data:
+                        uuid: 550e8400-e29b-41d4-a716-446655440000
+                        status: approved
+                        provider: regtank
+                        provider_reference_id: REF123456
+                        created_at: '2025-01-15T10:30:00.000000Z'
+                        updated_at: '2025-01-15T10:35:00.000000Z'
+                    properties:
+                      meta:
+                        type: object
+                        properties:
+                          code:
+                            type: integer
+                            example: 200
+                          message:
+                            type: string
+                            example: 'Status retrieved successfully'
+                          request_id:
+                            type: string
+                            example: 550e8400-e29b-41d4-a716-446655440006
+                      data:
+                        type: object
+                        properties:
+                          uuid:
+                            type: string
+                            example: 550e8400-e29b-41d4-a716-446655440000
+                          status:
+                            type: string
+                            example: approved
+                          provider:
+                            type: string
+                            example: regtank
+                          provider_reference_id:
+                            type: string
+                            example: REF123456
+                          created_at:
+                            type: string
+                            example: '2025-01-15T10:30:00.000000Z'
+                          updated_at:
+                            type: string
+                            example: '2025-01-15T10:35:00.000000Z'
+        401:
+          description: 'Authentication failed - invalid or missing X-API-KEY header'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 401
+                    message: Unauthorized
+                    request_id: 550e8400-e29b-41d4-a716-446655440008
+                  errors:
+                    error: Unauthorized
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 401
+                      message:
+                        type: string
+                        example: Unauthorized
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440008
+                  errors:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: Unauthorized
+        404:
+          description: 'Profile not found - invalid UUID or profile does not exist'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 404
+                    message: 'Profile not found'
+                    request_id: 550e8400-e29b-41d4-a716-446655440007
+                  errors:
+                    error: 'Profile not found'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 404
+                      message:
+                        type: string
+                        example: 'Profile not found'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440007
+                  errors:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: 'Profile not found'
+      tags:
+        - 'KYC Screening'
+      security: []
+    parameters:
+      -
+        in: path
+        name: uuid
+        description: 'The UUID of the KYC profile returned from the screening request'
+        example: 550e8400-e29b-41d4-a716-446655440000
+        required: true
+        schema:
+          type: string
+  /api/v1/ocr:
+    post:
+      summary: 'Process OCR for identity documents'
+      operationId: processOCRForIdentityDocuments
+      description: 'Extracts text and data from Indonesian identity documents (KTP or Passport) using GlairAI OCR service. This endpoint processes uploaded document images and returns structured data including personal information, document numbers, and validity dates.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  -
+                    description: 'Successfully extracted data from KTP document'
+                    type: object
+                    example:
+                      meta:
+                        code: 200
+                        message: Success
+                        request_id: 550e8400-e29b-41d4-a716-446655440030
+                      data:
+                        fields:
+                          national_id_number: '3275012345670001'
+                          full_name: 'BUDI SANTOSO'
+                          place_of_birth: JAKARTA
+                          date_of_birth: '1990-01-15'
+                          gender: male
+                          address: 'JL. SUDIRMAN NO. 123'
+                          rt_rw: 001/002
+                          village: MENTENG
+                          district: MENTENG
+                          religion: islam
+                          marital_status: married
+                          occupation: 'private employee'
+                          citizenship: indonesian
+                          valid_until: lifetime
+                    properties:
+                      meta:
+                        type: object
+                        properties:
+                          code:
+                            type: integer
+                            example: 200
+                          message:
+                            type: string
+                            example: Success
+                          request_id:
+                            type: string
+                            example: 550e8400-e29b-41d4-a716-446655440030
+                      data:
+                        type: object
+                        properties:
+                          fields:
+                            type: object
+                            properties:
+                              national_id_number:
+                                type: string
+                                example: '3275012345670001'
+                              full_name:
+                                type: string
+                                example: 'BUDI SANTOSO'
+                              place_of_birth:
+                                type: string
+                                example: JAKARTA
+                              date_of_birth:
+                                type: string
+                                example: '1990-01-15'
+                              gender:
+                                type: string
+                                example: male
+                              address:
+                                type: string
+                                example: 'JL. SUDIRMAN NO. 123'
+                              rt_rw:
+                                type: string
+                                example: 001/002
+                              village:
+                                type: string
+                                example: MENTENG
+                              district:
+                                type: string
+                                example: MENTENG
+                              religion:
+                                type: string
+                                example: islam
+                              marital_status:
+                                type: string
+                                example: married
+                              occupation:
+                                type: string
+                                example: 'private employee'
+                              citizenship:
+                                type: string
+                                example: indonesian
+                              valid_until:
+                                type: string
+                                example: lifetime
+                  -
+                    description: 'Successfully extracted data from Passport document'
+                    type: object
+                    example:
+                      meta:
+                        code: 200
+                        message: Success
+                        request_id: 550e8400-e29b-41d4-a716-446655440031
+                      data:
+                        fields:
+                          passport_number: A12345678
+                          full_name: 'SITI RAHAYU'
+                          nationality: INDONESIA
+                          date_of_birth: '1985-05-20'
+                          place_of_birth: BANDUNG
+                          gender: female
+                          issue_date: '2020-01-15'
+                          expiry_date: '2025-01-14'
+                    properties:
+                      meta:
+                        type: object
+                        properties:
+                          code:
+                            type: integer
+                            example: 200
+                          message:
+                            type: string
+                            example: Success
+                          request_id:
+                            type: string
+                            example: 550e8400-e29b-41d4-a716-446655440031
+                      data:
+                        type: object
+                        properties:
+                          fields:
+                            type: object
+                            properties:
+                              passport_number:
+                                type: string
+                                example: A12345678
+                              full_name:
+                                type: string
+                                example: 'SITI RAHAYU'
+                              nationality:
+                                type: string
+                                example: INDONESIA
+                              date_of_birth:
+                                type: string
+                                example: '1985-05-20'
+                              place_of_birth:
+                                type: string
+                                example: BANDUNG
+                              gender:
+                                type: string
+                                example: female
+                              issue_date:
+                                type: string
+                                example: '2020-01-15'
+                              expiry_date:
+                                type: string
+                                example: '2025-01-14'
+        400:
+          description: 'Invalid document type - only KTP and PASSPORT are supported'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 400
+                    message: 'Unsupported document type'
+                    request_id: 550e8400-e29b-41d4-a716-446655440034
+                  errors:
+                    error: 'Unsupported document type'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 400
+                      message:
+                        type: string
+                        example: 'Unsupported document type'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440034
+                  errors:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: 'Unsupported document type'
+        422:
+          description: 'Validation error - missing or invalid fields'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 422
+                    message: 'Validation failed'
+                    request_id: 550e8400-e29b-41d4-a716-446655440032
+                  errors:
+                    document_type:
+                      - 'The document type field is required.'
+                    image:
+                      - 'The image field is required.'
+                      - 'The image must be a file of type: jpeg, png, jpg, gif, svg.'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 422
+                      message:
+                        type: string
+                        example: 'Validation failed'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440032
+                  errors:
+                    type: object
+                    properties:
+                      document_type:
+                        type: array
+                        example:
+                          - 'The document type field is required.'
+                        items:
+                          type: string
+                      image:
+                        type: array
+                        example:
+                          - 'The image field is required.'
+                          - 'The image must be a file of type: jpeg, png, jpg, gif, svg.'
+                        items:
+                          type: string
+        503:
+          description: 'OCR service unavailable or failed to process document'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 503
+                    message: 'KTP reading failed'
+                    request_id: 550e8400-e29b-41d4-a716-446655440033
+                  errors:
+                    error: 'KTP reading failed'
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 503
+                      message:
+                        type: string
+                        example: 'KTP reading failed'
+                      request_id:
+                        type: string
+                        example: 550e8400-e29b-41d4-a716-446655440033
+                  errors:
+                    type: object
+                    properties:
+                      error:
+                        type: string
+                        example: 'KTP reading failed'
+      tags:
+        - 'OCR Services'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                document_type:
+                  type: string
+                  description: 'Type of document to process (KTP or PASSPORT)'
+                  example: KTP
+                  nullable: false
+                image:
+                  type: string
+                  format: binary
+                  description: 'Image file of the document (jpeg, png, jpg, gif, svg). Max size: 2MB'
+                  nullable: false
+                options:
+                  type: object
+                  description: 'Optional OCR processing options'
+                  example: []
+                  nullable: false
+                  properties:
+                    enhance:
+                      type: boolean
+                      description: 'Enable image enhancement for better OCR accuracy'
+                      example: true
+                      nullable: false
+                    lang:
+                      type: string
+                      description: "Language code for OCR (e.g., 'id' for Indonesian)"
+                      example: id
+                      nullable: false
+                    detect_orientation:
+                      type: boolean
+                      description: 'Automatically detect and correct document orientation'
+                      example: true
+                      nullable: false
+                meta:
+                  type: object
+                  description: 'Metadata for the request'
+                  example: []
+                  nullable: false
+                  properties:
+                    test:
+                      type: boolean
+                      description: 'Set to true to return mock data without calling GlairAI (for testing)'
+                      example: false
+                      nullable: false
+              required:
+                - document_type
+                - image
+      security: []
+  /api/v1/providers:
+    get:
+      summary: 'List KYC Providers'
+      operationId: listKYCProviders
+      description: 'Retrieve all available KYC service providers'
+      parameters: []
+      responses:
+        200:
+          description: 'Successful response with provider list'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  meta:
+                    code: 200
+                    message: Success
+                    request_id: uuid
+                  data:
+                    - regtank
+                    - glair_ai
+                    - test
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 200
+                      message:
+                        type: string
+                        example: Success
+                      request_id:
+                        type: string
+                        example: uuid
+                  data:
+                    type: array
+                    example:
+                      - regtank
+                      - glair_ai
+                      - test
+                    items:
+                      type: string
+      tags:
+        - 'System Information'
+      security: []

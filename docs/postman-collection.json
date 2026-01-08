@@ -1,0 +1,488 @@
+{
+    "variable": [
+        {
+            "id": "baseUrl",
+            "key": "baseUrl",
+            "type": "string",
+            "name": "string",
+            "value": "http:\/\/localhost:8888"
+        }
+    ],
+    "info": {
+        "name": "MEXAR KYC MSA API Documentation",
+        "_postman_id": "cac65714-e8ae-44f5-8cb6-5b8c19b33593",
+        "description": "",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
+    },
+    "item": [
+        {
+            "name": "Endpoints",
+            "description": "",
+            "item": [
+                {
+                    "name": "GET api\/user",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/user",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/user"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Entity Onboarding",
+            "description": "",
+            "item": [
+                {
+                    "name": "Submit individual onboarding check",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/e-form-onboarding",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/e-form-onboarding"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "Your API key for authentication"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"john.doe@example.com\",\"surname\":\"Doe\",\"forename\":\"John\",\"countryOfResidence\":\"SG\",\"placeOfBirth\":\"Singapore\",\"nationality\":\"SG\",\"idIssuingCountry\":\"SG\",\"dateOfBirth\":\"1985-03-15\",\"gender\":\"Male\"}"
+                        },
+                        "description": "Performs compliance screening for individual entity onboarding using RegTank. This endpoint checks individuals against sanctions lists, PEP databases, and adverse media for customer due diligence and compliance purposes.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n            \"meta\": {\n                \"code\": 200,\n                \"message\": \"Screening successful\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440020\"\n            },\n            \"data\": {\n                \"requestId\": \"REG-789012\",\n                \"status\": \"pending\",\n                \"email\": \"john.doe@example.com\",\n                \"name\": \"John Doe\"\n            }\n        }",
+                            "name": "Onboarding screening request successfully submitted to RegTank"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n            \"meta\": {\n                \"code\": 422,\n                \"message\": \"Validation failed\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440021\"\n            },\n            \"errors\": {\n                \"email\": [\"The email field is required.\", \"The email must be a valid email address.\"]\n            }\n        }",
+                            "name": "Validation error - email is required and must be valid"
+                        },
+                        {
+                            "header": [],
+                            "code": 500,
+                            "body": "{\n            \"meta\": {\n                \"code\": 500,\n                \"message\": \"Screening failed\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440022\"\n            },\n            \"errors\": {\n                \"error\": \"RegTank API connection failed\"\n            }\n        }",
+                            "name": "Provider error or internal server error"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "KYB Screening",
+            "description": "",
+            "item": [
+                {
+                    "name": "Submit KYB screening request",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/e-form-kyb",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/e-form-kyb"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "Your API key for authentication"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"referenceId\":\"COMPANY-REF-123\",\"businessName\":\"Acme Corporation Ltd\",\"businessIdNumber\":\"123456789\",\"address1\":\"123 Business Street, Suite 100\",\"email\":\"contact@acme.com\",\"phone\":\"+1-555-0123\",\"website\":\"https:\\\/\\\/www.acme.com\",\"dateOfIncorporation\":\"2010-05-15\"}"
+                        },
+                        "description": "Initiates a KYB (Know Your Business) screening process for company verification using RegTank's Dow Jones database. This endpoint screens businesses against sanctions lists, adverse media, and politically exposed persons databases.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n            \"meta\": {\n                \"code\": 200,\n                \"message\": \"Screening successful\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440010\"\n            },\n            \"data\": {\n                \"requestId\": \"REG-123456\",\n                \"status\": \"pending\",\n                \"businessName\": \"Acme Corporation Ltd\"\n            }\n        }",
+                            "name": "KYB screening request successfully submitted to RegTank"
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\n            \"meta\": {\n                \"code\": 400,\n                \"message\": \"Screening failed\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440012\"\n            },\n            \"errors\": {\n                \"error\": \"Provider connection failed\"\n            }\n        }",
+                            "name": "RegTank provider error"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n            \"meta\": {\n                \"code\": 422,\n                \"message\": \"Validation failed\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440011\"\n            },\n            \"errors\": {\n                \"referenceId\": [\"The reference id field is required.\"],\n                \"businessName\": [\"The business name field is required.\"],\n                \"businessIdNumber\": [\"The business id number field is required.\"]\n            }\n        }",
+                            "name": "Validation error - required fields missing"
+                        },
+                        {
+                            "header": [],
+                            "code": 500,
+                            "body": "{\n            \"meta\": {\n                \"code\": 500,\n                \"message\": \"Screening failed\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440013\"\n            },\n            \"errors\": {\n                \"error\": \"An internal error happened\"\n            }\n        }",
+                            "name": "Internal server error"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "KYC Screening",
+            "description": "",
+            "item": [
+                {
+                    "name": "Submit KYC screening request",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/screen",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/screen"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "Your API key for authentication"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"personal_info\":{\"first_name\":\"John\",\"last_name\":\"Doe\",\"gender\":\"Male\",\"date_of_birth\":\"1990-01-15\",\"nationality\":\"ID\"},\"identification\":{\"id_type\":\"national_id\",\"id_number\":\"1234567890123456\",\"issuing_country\":\"ID\",\"issue_date\":\"2020-01-01\",\"expiry_date\":\"2030-01-01\"},\"address\":{\"street\":\"Jl. Sudirman\",\"city\":\"Jakarta\",\"state\":\"DKI Jakarta\",\"postal_code\":\"12190\",\"country\":\"ID\",\"address_line\":\"Jl. Sudirman No. 123\"},\"contact\":{\"email\":\"john.doe@example.com\",\"phone\":\"+62812345678\"},\"meta\":{\"service_provider\":\"regtank\",\"reference_id\":\"YOUR-REF-123\",\"status\":\"architecto\",\"test\":false}}"
+                        },
+                        "description": "Initiates an asynchronous KYC (Know Your Customer) screening process. This endpoint creates a KYC profile with PENDING status and returns a reference ID immediately. The actual verification is processed asynchronously by the selected provider (RegTank or GlairAI). Once processing completes, a webhook notification will be sent to your configured webhook URL, and you can also poll the status endpoint.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n            \"meta\": {\n                \"code\": 200,\n                \"message\": \"Screening successful\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n            },\n            \"data\": {\n                \"identity\": \"550e8400-e29b-41d4-a716-446655440000\"\n            }\n        }",
+                            "name": "KYC screening request accepted. The identity field contains the UUID for status polling. Use GET \/api\/status\/{uuid} to check the screening status, or wait for webhook notification to your configured webhook URL."
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\n            \"meta\": {\n                \"code\": 400,\n                \"message\": \"Screening failed\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440003\"\n            },\n            \"errors\": {\n                \"error\": \"Provider connection failed\"\n            }\n        }",
+                            "name": "Provider error - the KYC provider returned an error or is unavailable"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\n            \"meta\": {\n                \"code\": 401,\n                \"message\": \"Unauthorized\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440002\"\n            },\n            \"errors\": {\n                \"error\": \"Unauthorized\"\n            }\n        }",
+                            "name": "Authentication failed - invalid or missing X-API-KEY header"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n            \"meta\": {\n                \"code\": 422,\n                \"message\": \"Validation failed\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440001\"\n            },\n            \"errors\": {\n                \"personal_info.nationality\": [\n                    \"The personal info.nationality field is required.\"\n                ],\n                \"identification.id_type\": [\n                    \"The identification.id type field is required.\"\n                ]\n            }\n        }",
+                            "name": "Validation error - required fields are missing or invalid"
+                        },
+                        {
+                            "header": [],
+                            "code": 500,
+                            "body": "{\n            \"meta\": {\n                \"code\": 500,\n                \"message\": \"Screening failed\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440004\"\n            },\n            \"errors\": {\n                \"error\": \"An internal error happened\"\n            }\n        }",
+                            "name": "Internal server error - an unexpected error occurred during processing"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get KYC screening status",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/status\/:uuid",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/status\/:uuid",
+                            "variable": [
+                                {
+                                    "id": "uuid",
+                                    "key": "uuid",
+                                    "value": "550e8400-e29b-41d4-a716-446655440000",
+                                    "description": "The UUID of the KYC profile returned from the screening request"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-API-KEY",
+                                "value": "Your API key for authentication"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retrieve the current status of a KYC screening request by UUID. Use this endpoint to poll for screening results after submitting a KYC request. The status will be 'pending' initially, then change to 'approved', 'rejected', or 'error' once the provider completes processing.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n            \"meta\": {\n                \"code\": 200,\n                \"message\": \"Status retrieved successfully\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440005\"\n            },\n            \"data\": {\n                \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n                \"status\": \"pending\",\n                \"provider\": \"regtank\",\n                \"provider_reference_id\": \"REF123456\",\n                \"created_at\": \"2025-01-15T10:30:00.000000Z\",\n                \"updated_at\": \"2025-01-15T10:30:00.000000Z\"\n            }\n        }",
+                            "name": "Status retrieved successfully. Status values: pending (processing), approved (verified), rejected (failed verification), error (provider error)"
+                        },
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n            \"meta\": {\n                \"code\": 200,\n                \"message\": \"Status retrieved successfully\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440006\"\n            },\n            \"data\": {\n                \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n                \"status\": \"approved\",\n                \"provider\": \"regtank\",\n                \"provider_reference_id\": \"REF123456\",\n                \"created_at\": \"2025-01-15T10:30:00.000000Z\",\n                \"updated_at\": \"2025-01-15T10:35:00.000000Z\"\n            }\n        }",
+                            "name": "Example of approved status - verification passed"
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\n            \"meta\": {\n                \"code\": 401,\n                \"message\": \"Unauthorized\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440008\"\n            },\n            \"errors\": {\n                \"error\": \"Unauthorized\"\n            }\n        }",
+                            "name": "Authentication failed - invalid or missing X-API-KEY header"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\n            \"meta\": {\n                \"code\": 404,\n                \"message\": \"Profile not found\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440007\"\n            },\n            \"errors\": {\n                \"error\": \"Profile not found\"\n            }\n        }",
+                            "name": "Profile not found - invalid UUID or profile does not exist"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "OCR Services",
+            "description": "",
+            "item": [
+                {
+                    "name": "Process OCR for identity documents",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/ocr",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/ocr"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "JWT Bearer token for authentication"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "document_type",
+                                    "value": "KTP",
+                                    "type": "text",
+                                    "description": "Type of document to process (KTP or PASSPORT)"
+                                },
+                                {
+                                    "key": "options[enhance]",
+                                    "value": "1",
+                                    "type": "text",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "options[lang]",
+                                    "value": "id",
+                                    "type": "text",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "options[detect_orientation]",
+                                    "value": "1",
+                                    "type": "text",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "meta[test]",
+                                    "value": "",
+                                    "type": "text",
+                                    "description": ""
+                                },
+                                {
+                                    "key": "image",
+                                    "src": [],
+                                    "type": "file"
+                                }
+                            ]
+                        },
+                        "description": "Extracts text and data from Indonesian identity documents (KTP or Passport) using GlairAI OCR service. This endpoint processes uploaded document images and returns structured data including personal information, document numbers, and validity dates.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n            \"meta\": {\n                \"code\": 200,\n                \"message\": \"Success\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440030\"\n            },\n            \"data\": {\n                \"fields\": {\n                    \"national_id_number\": \"3275012345670001\",\n                    \"full_name\": \"BUDI SANTOSO\",\n                    \"place_of_birth\": \"JAKARTA\",\n                    \"date_of_birth\": \"1990-01-15\",\n                    \"gender\": \"male\",\n                    \"address\": \"JL. SUDIRMAN NO. 123\",\n                    \"rt_rw\": \"001\/002\",\n                    \"village\": \"MENTENG\",\n                    \"district\": \"MENTENG\",\n                    \"religion\": \"islam\",\n                    \"marital_status\": \"married\",\n                    \"occupation\": \"private employee\",\n                    \"citizenship\": \"indonesian\",\n                    \"valid_until\": \"lifetime\"\n                }\n            }\n        }",
+                            "name": "Successfully extracted data from KTP document"
+                        },
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n            \"meta\": {\n                \"code\": 200,\n                \"message\": \"Success\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440031\"\n            },\n            \"data\": {\n                \"fields\": {\n                    \"passport_number\": \"A12345678\",\n                    \"full_name\": \"SITI RAHAYU\",\n                    \"nationality\": \"INDONESIA\",\n                    \"date_of_birth\": \"1985-05-20\",\n                    \"place_of_birth\": \"BANDUNG\",\n                    \"gender\": \"female\",\n                    \"issue_date\": \"2020-01-15\",\n                    \"expiry_date\": \"2025-01-14\"\n                }\n            }\n        }",
+                            "name": "Successfully extracted data from Passport document"
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\n            \"meta\": {\n                \"code\": 400,\n                \"message\": \"Unsupported document type\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440034\"\n            },\n            \"errors\": {\n                \"error\": \"Unsupported document type\"\n            }\n        }",
+                            "name": "Invalid document type - only KTP and PASSPORT are supported"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n            \"meta\": {\n                \"code\": 422,\n                \"message\": \"Validation failed\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440032\"\n            },\n            \"errors\": {\n                \"document_type\": [\"The document type field is required.\"],\n                \"image\": [\"The image field is required.\", \"The image must be a file of type: jpeg, png, jpg, gif, svg.\"]\n            }\n        }",
+                            "name": "Validation error - missing or invalid fields"
+                        },
+                        {
+                            "header": [],
+                            "code": 503,
+                            "body": "{\n            \"meta\": {\n                \"code\": 503,\n                \"message\": \"KTP reading failed\",\n                \"request_id\": \"550e8400-e29b-41d4-a716-446655440033\"\n            },\n            \"errors\": {\n                \"error\": \"KTP reading failed\"\n            }\n        }",
+                            "name": "OCR service unavailable or failed to process document"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "System Information",
+            "description": "",
+            "item": [
+                {
+                    "name": "List KYC Providers",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/providers",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/providers"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retrieve all available KYC service providers",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"meta\": {\"code\": 200, \"message\": \"Success\", \"request_id\": \"uuid\"}, \"data\": [\"regtank\", \"glair_ai\", \"test\"]}",
+                            "name": "Successful response with provider list"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "noauth"
+    }
+}
