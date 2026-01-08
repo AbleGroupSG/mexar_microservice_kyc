@@ -6,6 +6,7 @@ use App\DTO\UserDataDTO;
 use App\Enums\KycServiceTypeEnum;
 use App\Enums\KycStatuseEnum;
 use App\Models\KYCProfile;
+use App\Services\KYC\KycWorkflowService;
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -55,35 +56,39 @@ class TestKYCResultJob implements ShouldQueue
         }
 
         try {
+            $workflowService = app(KycWorkflowService::class);
+
             // Parse UserDataDTO from profile_data (handle both string and array)
             $profileData = is_string($profile->profile_data)
                 ? json_decode($profile->profile_data, true)
                 : $profile->profile_data;
             $userDataDTO = UserDataDTO::from($profileData);
 
-            // Determine final status (use desired status or default to approved for test mode)
-            $finalStatus = $this->determineFinalStatus();
+            // Determine provider result (use desired status or default to approved for test mode)
+            $providerResult = $this->determineFinalStatus();
 
             // Simulate test verification process
             $response = [
                 'test_mode' => true,
-                'verification_status' => $finalStatus === KycStatuseEnum::APPROVED,
-                'reason' => $this->getReasonForStatus($finalStatus),
+                'verification_status' => $providerResult === KycStatuseEnum::APPROVED,
+                'reason' => $this->getReasonForStatus($providerResult),
                 'timestamp' => now()->toIso8601String(),
             ];
 
-            // Update profile with result
+            // Update profile with result using workflow service to handle manual review
             $profile->provider_response_data = $response;
-            $profile->status = $finalStatus;
+            $profile->status = $workflowService->resolveStatus($profile, $providerResult);
             $profile->save();
 
             Log::info('Test KYC verification completed', [
                 'profile_id' => $profile->id,
-                'status' => $finalStatus->value,
+                'status' => $profile->status->value,
             ]);
 
-            // Dispatch async job to send webhook to client's configured webhook URL
-            SendKycWebhookJob::dispatch($profile->id);
+            // Only dispatch webhook if not awaiting manual review
+            if ($workflowService->shouldDispatchWebhook($profile)) {
+                SendKycWebhookJob::dispatch($profile->id);
+            }
 
         } catch (Exception $e) {
             Log::error('Test KYC verification failed', [
@@ -92,14 +97,19 @@ class TestKYCResultJob implements ShouldQueue
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            $profile->status = KycStatuseEnum::ERROR;
+            $workflowService = app(KycWorkflowService::class);
+
+            // Use workflow service to resolve ERROR status
+            $profile->status = $workflowService->resolveStatus($profile, KycStatuseEnum::ERROR);
             $profile->save();
 
-            // Dispatch async job to send error webhook
-            SendKycWebhookJob::dispatch(
-                profileId: $profile->id,
-                additionalData: ['error' => $e->getMessage()]
-            );
+            // Only dispatch webhook if not awaiting manual review
+            if ($workflowService->shouldDispatchWebhook($profile)) {
+                SendKycWebhookJob::dispatch(
+                    profileId: $profile->id,
+                    additionalData: ['error' => $e->getMessage()]
+                );
+            }
         }
     }
 
@@ -166,8 +176,10 @@ class TestKYCResultJob implements ShouldQueue
             return;
         }
 
-        // Update profile to ERROR status
-        $profile->status = KycStatuseEnum::ERROR;
+        $workflowService = app(KycWorkflowService::class);
+
+        // Update profile to ERROR status using workflow service
+        $profile->status = $workflowService->resolveStatus($profile, KycStatuseEnum::ERROR);
         $profile->provider_response_data = [
             'error' => $exception->getMessage(),
             'failed_at' => now()->toIso8601String(),
@@ -176,12 +188,14 @@ class TestKYCResultJob implements ShouldQueue
         ];
         $profile->save();
 
-        // Dispatch async job to send error webhook to client
-        SendKycWebhookJob::dispatch(
-            profileId: $profile->id,
-            additionalData: [
-                'error' => 'Test verification failed after ' . $this->attempts() . ' attempts: ' . $exception->getMessage()
-            ]
-        );
+        // Only dispatch webhook if not awaiting manual review
+        if ($workflowService->shouldDispatchWebhook($profile)) {
+            SendKycWebhookJob::dispatch(
+                profileId: $profile->id,
+                additionalData: [
+                    'error' => 'Test verification failed after ' . $this->attempts() . ' attempts: ' . $exception->getMessage()
+                ]
+            );
+        }
     }
 }

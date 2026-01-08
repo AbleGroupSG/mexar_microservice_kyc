@@ -13,6 +13,7 @@ use App\Models\CompanyKyb;
 use App\Models\KYCProfile;
 use App\Models\WebhookLog;
 use App\Services\EFormAppService;
+use App\Services\KYC\KycWorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -36,22 +37,27 @@ class RegtankWebhookController extends Controller
             ->first();
 
         if ($profile) {
-            $status = $this->resolveStatus($dto->status);
+            $workflowService = app(KycWorkflowService::class);
+
+            // Get provider result and resolve to appropriate status
+            $providerResult = $this->resolveStatus($dto->status);
             $profile->provider_response_data = $data;
-            $profile->status = $status;
+            $profile->status = $workflowService->resolveStatus($profile, $providerResult);
             $profile->save();
 
-            // Dispatch async job to send webhook to client's configured webhook URL
-            SendKycWebhookJob::dispatch(
-                profileId: $profile->id,
-                additionalData: [
-                    'provider_data' => [
-                        'status' => $dto->status,
-                        'riskLevel' => $dto->riskLevel,
-                        'timestamp' => $dto->timestamp,
-                    ],
-                ]
-            );
+            // Only dispatch webhook if not awaiting manual review
+            if ($workflowService->shouldDispatchWebhook($profile)) {
+                SendKycWebhookJob::dispatch(
+                    profileId: $profile->id,
+                    additionalData: [
+                        'provider_data' => [
+                            'status' => $dto->status,
+                            'riskLevel' => $dto->riskLevel,
+                            'timestamp' => $dto->timestamp,
+                        ],
+                    ]
+                );
+            }
         } else {
             Log::error('KYC profile not found', ['provider_reference_id' => $dto->requestId]);
         }

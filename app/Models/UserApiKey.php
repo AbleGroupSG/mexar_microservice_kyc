@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property string $api_key
  * @property string|null $signature_key
  * @property string|null $webhook_url
+ * @property bool $need_manual_review
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -33,6 +34,7 @@ class UserApiKey extends Model
         'api_key',
         'signature_key',
         'webhook_url',
+        'need_manual_review',
     ];
 
     protected $hidden = [
@@ -42,6 +44,7 @@ class UserApiKey extends Model
 
     protected $casts = [
         'user_id' => 'integer',
+        'need_manual_review' => 'boolean',
     ];
 
     /**

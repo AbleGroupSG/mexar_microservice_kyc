@@ -85,6 +85,16 @@
                         </label>
                     </div>
 
+                    <div class="form-control mt-4">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" wire:model="need_manual_review" class="checkbox checkbox-primary" />
+                            <div>
+                                <span class="label-text font-semibold">Require Manual Review</span>
+                                <p class="text-xs text-base-content/70">When enabled, KYC results require admin approval before webhook is sent to client</p>
+                            </div>
+                        </label>
+                    </div>
+
                     <div class="card-actions justify-end mt-4">
                         <button type="button" wire:click="toggleCreateForm" class="btn btn-ghost">Cancel</button>
                         <button type="submit" class="btn btn-primary">Create API Key</button>
@@ -101,7 +111,12 @@
                 <div class="card-body">
                     <div class="flex justify-between items-start">
                         <div class="flex-1">
-                            <h3 class="font-bold text-lg">{{ $apiKey->name }}</h3>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-bold text-lg">{{ $apiKey->name }}</h3>
+                                @if ($apiKey->need_manual_review)
+                                    <span class="badge badge-info badge-sm">Manual Review Required</span>
+                                @endif
+                            </div>
                             @if ($isAdmin && $apiKey->user)
                                 <p class="text-sm text-base-content/70 font-semibold">
                                     User: {{ $apiKey->user->name }}

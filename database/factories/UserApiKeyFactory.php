@@ -49,4 +49,14 @@ class UserApiKeyFactory extends Factory
             'signature_key' => null,
         ]);
     }
+
+    /**
+     * Indicate that the API key requires manual review.
+     */
+    public function withManualReview(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'need_manual_review' => true,
+        ]);
+    }
 }

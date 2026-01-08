@@ -158,6 +158,11 @@ class GlairAIService implements KYCServiceInterface
             ->timeout(300)
             ->post($url, $data);
 
+        logger()->debug('GlairAI basicVerification response', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+
         ApiRequestLog::saveRequest(
             data:  $data,
             response: $response->body(),

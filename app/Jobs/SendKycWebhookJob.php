@@ -57,7 +57,7 @@ class SendKycWebhookJob implements ShouldQueue
     public function handle(): void
     {
         $profile = KYCProfile::query()
-            ->with(['apiKey', 'user'])
+            ->with(['apiKey', 'user', 'reviewer'])
             ->find($this->profileId);
 
         if (! $profile) {
@@ -91,8 +91,28 @@ class SendKycWebhookJob implements ShouldQueue
                 'attempt' => $this->attempts(),
             ]);
 
+            // Build request headers with optional signature
+            $headers = [];
+            $signatureKey = $profile->apiKey->signature_key;
+
+            if ($signatureKey) {
+                $timestamp = time();
+                $payloadJson = json_encode($payload);
+                $signature = hash_hmac('sha256', $timestamp . '.' . $payloadJson, $signatureKey);
+
+                $headers['X-Webhook-Signature'] = $signature;
+                $headers['X-Webhook-Timestamp'] = (string) $timestamp;
+
+                Log::debug('SendKycWebhook: Signature generated', [
+                    'profile_id' => $profile->id,
+                    'timestamp' => $timestamp,
+                ]);
+            }
+
             // Send webhook with 30-second timeout
-            $response = Http::timeout(30)->post($webhookUrl, $payload);
+            $response = Http::timeout(30)
+                ->withHeaders($headers)
+                ->post($webhookUrl, $payload);
 
             if (! $response->successful()) {
                 Log::error('SendKycWebhook: Failed to send webhook', [
@@ -152,6 +172,9 @@ class SendKycWebhookJob implements ShouldQueue
         // Extract provider-specific data (e.g., RegTank DTO)
         $providerData = $this->additionalData['provider_data'] ?? [];
 
+        // Extract review data if present (from manual review workflow)
+        $reviewData = $this->additionalData['review_data'] ?? null;
+
         // Determine timestamps based on status
         $verifiedAt = $profile->status === KycStatuseEnum::APPROVED
             ? $this->getTimestamp($profile, $providerData)
@@ -171,6 +194,13 @@ class SendKycWebhookJob implements ShouldQueue
         // Build message
         $message = $errorMessage ?? $this->buildMessage($profile, $providerData);
 
+        // Build review notes - prioritize review data from manual review,
+        // then profile review_notes, then provider status
+        $reviewNotes = $reviewData['notes']
+            ?? $profile->review_notes
+            ?? $providerData['status']
+            ?? ($errorMessage ? null : 'Verification completed');
+
         return [
             'event' => 'kyc.status.changed',
             'payload' => [
@@ -183,8 +213,12 @@ class SendKycWebhookJob implements ShouldQueue
                 'verified_at' => $verifiedAt,
                 'rejected_at' => $rejectedAt,
                 'message' => $message,
-                'review_notes' => $providerData['status'] ?? ($errorMessage ? null : 'Verification completed'),
+                'review_notes' => $reviewNotes,
                 'failure_reason' => $failureReason,
+                // Manual review fields
+                'reviewed_by' => $reviewData['reviewed_by'] ?? $profile->reviewer?->name,
+                'reviewed_at' => $reviewData['reviewed_at'] ?? $profile->reviewed_at?->toIso8601String(),
+                'original_provider_status' => $reviewData['original_provider_status'] ?? $profile->provider_status?->value,
             ],
         ];
     }

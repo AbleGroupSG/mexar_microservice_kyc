@@ -28,11 +28,14 @@
                     </label>
                     <select wire:model.live="statusFilter" class="select select-bordered w-full">
                         <option value="">All Statuses</option>
-                        <option value="PENDING">Pending</option>
-                        <option value="APPROVED">Approved</option>
-                        <option value="REJECTED">Rejected</option>
-                        <option value="WAITING_FOR_INPUT">Waiting for Input</option>
-                        <option value="ONHOLD">On Hold</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="error">Error</option>
+                        <option value="unresolved">Unresolved</option>
+                        <option value="provider_approved">Awaiting Review (Approved)</option>
+                        <option value="provider_rejected">Awaiting Review (Rejected)</option>
+                        <option value="provider_error">Awaiting Review (Error)</option>
                     </select>
                 </div>
 
@@ -50,7 +53,22 @@
                 </div>
             </div>
 
-            @if ($search || $statusFilter || $providerFilter)
+            <!-- Awaiting Review Filter -->
+            @if ($isAdmin)
+                <div class="form-control mt-4">
+                    <label class="label cursor-pointer justify-start gap-4">
+                        <input type="checkbox" wire:model.live="awaitingReviewFilter" class="checkbox checkbox-primary" />
+                        <span class="label-text">
+                            Awaiting Review Only
+                            @if ($awaitingReviewCount > 0)
+                                <span class="badge badge-primary badge-sm ml-2">{{ $awaitingReviewCount }}</span>
+                            @endif
+                        </span>
+                    </label>
+                </div>
+            @endif
+
+            @if ($search || $statusFilter || $providerFilter || $awaitingReviewFilter)
                 <div class="mt-4">
                     <button wire:click="clearFilters" class="btn btn-ghost btn-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,16 +122,26 @@
                         <td>
                             @php
                                 $statusColors = [
-                                    'PENDING' => 'badge-warning',
-                                    'APPROVED' => 'badge-success',
-                                    'REJECTED' => 'badge-error',
-                                    'WAITING_FOR_INPUT' => 'badge-info',
-                                    'ONHOLD' => 'badge-warning',
+                                    'pending' => 'badge-warning',
+                                    'approved' => 'badge-success',
+                                    'rejected' => 'badge-error',
+                                    'error' => 'badge-error',
+                                    'unresolved' => 'badge-warning',
+                                    'provider_approved' => 'badge-info',
+                                    'provider_rejected' => 'badge-info',
+                                    'provider_error' => 'badge-info',
                                 ];
-                                $statusColor = $statusColors[$profile->status?->value ?? ''] ?? 'badge-neutral';
+                                $statusValue = $profile->status?->value ?? '';
+                                $statusColor = $statusColors[$statusValue] ?? 'badge-neutral';
+                                $statusLabels = [
+                                    'provider_approved' => 'Awaiting Review (Approved)',
+                                    'provider_rejected' => 'Awaiting Review (Rejected)',
+                                    'provider_error' => 'Awaiting Review (Error)',
+                                ];
+                                $statusLabel = $statusLabels[$statusValue] ?? ucfirst($statusValue);
                             @endphp
                             <div class="badge {{ $statusColor }}">
-                                {{ $profile->status?->value ?? 'Unknown' }}
+                                {{ $statusLabel ?: 'Unknown' }}
                             </div>
                         </td>
                         <td>
@@ -121,12 +149,28 @@
                             <div class="text-xs text-base-content/70">{{ $profile->created_at->format('H:i:s') }}</div>
                         </td>
                         <td>
-                            <button
-                                @click="$dispatch('open-modal', { id: '{{ $profile->id }}' })"
-                                class="btn btn-ghost btn-sm"
-                            >
-                                View Details
-                            </button>
+                            <div class="flex flex-wrap gap-1">
+                                <button
+                                    @click="$dispatch('open-modal', { id: '{{ $profile->id }}' })"
+                                    class="btn btn-ghost btn-xs"
+                                >
+                                    View
+                                </button>
+                                @if ($isAdmin && $profile->isAwaitingReview())
+                                    <button
+                                        wire:click="openReviewModal('{{ $profile->id }}', 'approve')"
+                                        class="btn btn-success btn-xs"
+                                    >
+                                        Approve
+                                    </button>
+                                    <button
+                                        wire:click="openReviewModal('{{ $profile->id }}', 'reject')"
+                                        class="btn btn-error btn-xs"
+                                    >
+                                        Reject
+                                    </button>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -180,6 +224,66 @@
             <div class="modal-backdrop" @click="profileId = null; profileData = null"></div>
         </div>
     </div>
+
+    <!-- Flash Messages -->
+    @if (session()->has('success'))
+        <div class="toast toast-top toast-end">
+            <div class="alert alert-success">
+                <span>{{ session('success') }}</span>
+            </div>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="toast toast-top toast-end">
+            <div class="alert alert-error">
+                <span>{{ session('error') }}</span>
+            </div>
+        </div>
+    @endif
+
+    <!-- Manual Review Modal -->
+    @if ($reviewProfileId)
+        <div class="modal modal-open">
+            <div class="modal-box">
+                <h3 class="font-bold text-lg">
+                    {{ $reviewAction === 'approve' ? 'Approve' : 'Reject' }} KYC Profile
+                </h3>
+                <p class="py-2 text-sm text-base-content/70">
+                    Profile ID: {{ Str::limit($reviewProfileId, 24) }}
+                </p>
+
+                <div class="form-control w-full mt-4">
+                    <label class="label">
+                        <span class="label-text">Review Notes <span class="text-error">*</span></span>
+                    </label>
+                    <textarea
+                        wire:model="reviewNotes"
+                        class="textarea textarea-bordered h-24 @error('reviewNotes') textarea-error @enderror"
+                        placeholder="Enter your review notes (minimum 10 characters)..."
+                    ></textarea>
+                    @error('reviewNotes')
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ $message }}</span>
+                        </label>
+                    @enderror
+                </div>
+
+                <div class="modal-action">
+                    <button wire:click="closeReviewModal" class="btn btn-ghost">Cancel</button>
+                    <button
+                        wire:click="submitReview"
+                        wire:loading.attr="disabled"
+                        class="btn {{ $reviewAction === 'approve' ? 'btn-success' : 'btn-error' }}"
+                    >
+                        <span wire:loading wire:target="submitReview" class="loading loading-spinner loading-xs"></span>
+                        Confirm {{ $reviewAction === 'approve' ? 'Approval' : 'Rejection' }}
+                    </button>
+                </div>
+            </div>
+            <div class="modal-backdrop" wire:click="closeReviewModal"></div>
+        </div>
+    @endif
 </div>
 
 @script

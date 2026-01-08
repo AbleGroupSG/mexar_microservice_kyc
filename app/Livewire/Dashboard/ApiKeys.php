@@ -18,6 +18,7 @@ class ApiKeys extends Component
     public string $name = '';
     public string $webhook_url = '';
     public string $signature_key = '';
+    public bool $need_manual_review = false;
     public bool $showCreateForm = false;
 
     public function getIsAdminProperty(): bool
@@ -31,6 +32,7 @@ class ApiKeys extends Component
             'name' => ['required', 'string', 'max:255'],
             'webhook_url' => ['nullable', 'url', 'max:255'],
             'signature_key' => ['nullable', 'string', 'min:16', 'max:255'],
+            'need_manual_review' => ['boolean'],
         ];
     }
 
@@ -43,9 +45,10 @@ class ApiKeys extends Component
             'api_key' => 'mexar_' . Str::random(40),
             'signature_key' => $this->signature_key ?: Str::random(32),
             'webhook_url' => $this->webhook_url,
+            'need_manual_review' => $this->need_manual_review,
         ]);
 
-        $this->reset(['name', 'webhook_url', 'signature_key', 'showCreateForm']);
+        $this->reset(['name', 'webhook_url', 'signature_key', 'need_manual_review', 'showCreateForm']);
         $this->dispatch('api-key-created');
         session()->flash('success', 'API key created successfully!');
     }
@@ -67,7 +70,7 @@ class ApiKeys extends Component
     {
         $this->showCreateForm = !$this->showCreateForm;
         if (!$this->showCreateForm) {
-            $this->reset(['name', 'webhook_url', 'signature_key']);
+            $this->reset(['name', 'webhook_url', 'signature_key', 'need_manual_review']);
             $this->resetValidation();
         }
     }

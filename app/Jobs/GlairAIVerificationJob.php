@@ -7,6 +7,7 @@ use App\Enums\KycServiceTypeEnum;
 use App\Enums\KycStatuseEnum;
 use App\Models\KYCProfile;
 use App\Services\KYC\GlairAI\GlairAIService;
+use App\Services\KYC\KycWorkflowService;
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -49,6 +50,11 @@ class GlairAIVerificationJob implements ShouldQueue
             ->with(['apiKey', 'user'])
             ->find($this->profileId);
 
+        logger()->debug('Starting GlairAI verification job', [
+            'profile_id' => $this->profileId,
+            'user_data' => json_encode($this->userDataDTO->toArray()),
+            'data' => json_encode($this->data ?? []),
+        ]);
         if (!$profile) {
             Log::error('GlairAI verification: Profile not found', ['profile_id' => $this->profileId]);
             return;
@@ -56,16 +62,23 @@ class GlairAIVerificationJob implements ShouldQueue
 
         try {
             $service = new GlairAIService();
+            $workflowService = app(KycWorkflowService::class);
+
             $response = $service->basicVerification($profile, $this->userDataDTO, $this->data);
 
-            // Update profile with result
-            $profile->provider_response_data = $response;
+            // Determine provider result
             $boolStatus = $response['verification_status'] ?? false;
-            $profile->status = $boolStatus ? KycStatuseEnum::APPROVED : KycStatuseEnum::REJECTED;
+            $providerResult = $boolStatus ? KycStatuseEnum::APPROVED : KycStatuseEnum::REJECTED;
+
+            // Update profile with result using workflow service to handle manual review
+            $profile->provider_response_data = $response;
+            $profile->status = $workflowService->resolveStatus($profile, $providerResult);
             $profile->save();
 
-            // Dispatch async job to send webhook to client's configured webhook URL
-            SendKycWebhookJob::dispatch($profile->id);
+            // Only dispatch webhook if not awaiting manual review
+            if ($workflowService->shouldDispatchWebhook($profile)) {
+                SendKycWebhookJob::dispatch($profile->id);
+            }
 
         } catch (Exception $e) {
             Log::error('GlairAI verification failed', [
@@ -73,14 +86,19 @@ class GlairAIVerificationJob implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
 
-            $profile->status = KycStatuseEnum::ERROR;
+            $workflowService = app(KycWorkflowService::class);
+
+            // Use workflow service to resolve ERROR status
+            $profile->status = $workflowService->resolveStatus($profile, KycStatuseEnum::ERROR);
             $profile->save();
 
-            // Dispatch async job to send error webhook
-            SendKycWebhookJob::dispatch(
-                profileId: $profile->id,
-                additionalData: ['error' => $e->getMessage()]
-            );
+            // Only dispatch webhook if not awaiting manual review
+            if ($workflowService->shouldDispatchWebhook($profile)) {
+                SendKycWebhookJob::dispatch(
+                    profileId: $profile->id,
+                    additionalData: ['error' => $e->getMessage()]
+                );
+            }
         }
     }
 
@@ -110,8 +128,10 @@ class GlairAIVerificationJob implements ShouldQueue
             return;
         }
 
-        // Update profile to ERROR status
-        $profile->status = KycStatuseEnum::ERROR;
+        $workflowService = app(KycWorkflowService::class);
+
+        // Update profile to ERROR status using workflow service
+        $profile->status = $workflowService->resolveStatus($profile, KycStatuseEnum::ERROR);
         $profile->provider_response_data = [
             'error' => $exception->getMessage(),
             'failed_at' => now()->toIso8601String(),
@@ -119,12 +139,14 @@ class GlairAIVerificationJob implements ShouldQueue
         ];
         $profile->save();
 
-        // Dispatch async job to send error webhook to client
-        SendKycWebhookJob::dispatch(
-            profileId: $profile->id,
-            additionalData: [
-                'error' => 'Verification failed after ' . $this->attempts() . ' attempts: ' . $exception->getMessage()
-            ]
-        );
+        // Only dispatch webhook if not awaiting manual review
+        if ($workflowService->shouldDispatchWebhook($profile)) {
+            SendKycWebhookJob::dispatch(
+                profileId: $profile->id,
+                additionalData: [
+                    'error' => 'Verification failed after ' . $this->attempts() . ' attempts: ' . $exception->getMessage()
+                ]
+            );
+        }
     }
 }
