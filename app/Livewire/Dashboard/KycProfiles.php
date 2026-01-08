@@ -31,8 +31,15 @@ class KycProfiles extends Component
 
     // Review modal properties
     public ?string $reviewProfileId = null;
+
     public string $reviewNotes = '';
+
     public ?string $reviewAction = null;
+
+    // View modal properties
+    public ?string $viewProfileId = null;
+
+    public ?array $viewProfileData = null;
 
     public function getIsAdminProperty(): bool
     {
@@ -60,13 +67,57 @@ class KycProfiles extends Component
     }
 
     /**
+     * Open the view modal for a specific profile.
+     */
+    public function openViewModal(string $profileId): void
+    {
+        $profile = KYCProfile::with(['user', 'apiKey', 'reviewer'])->find($profileId);
+
+        if (! $profile) {
+            session()->flash('error', 'Profile not found.');
+
+            return;
+        }
+
+        $this->viewProfileId = $profileId;
+        $this->viewProfileData = [
+            'id' => $profile->id,
+            'provider_reference_id' => $profile->provider_reference_id,
+            'provider' => $profile->provider,
+            'status' => $profile->status?->value,
+            'provider_status' => $profile->provider_status?->value,
+            'profile_data' => $profile->profile_data,
+            'provider_response_data' => $profile->provider_response_data,
+            'user' => [
+                'name' => $profile->user->name,
+                'email' => $profile->user->email,
+            ],
+            'api_key' => $profile->apiKey?->name,
+            'review_notes' => $profile->review_notes,
+            'reviewer' => $profile->reviewer?->name,
+            'reviewed_at' => $profile->reviewed_at?->format('Y-m-d H:i:s'),
+            'created_at' => $profile->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $profile->updated_at->format('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
+     * Close the view modal.
+     */
+    public function closeViewModal(): void
+    {
+        $this->reset(['viewProfileId', 'viewProfileData']);
+    }
+
+    /**
      * Submit the manual review.
      */
     public function submitReview(): void
     {
-        if (!$this->isAdmin) {
+        if (! $this->isAdmin) {
             session()->flash('error', 'Only admins can perform reviews.');
             $this->closeReviewModal();
+
             return;
         }
 
@@ -80,16 +131,18 @@ class KycProfiles extends Component
 
         $profile = KYCProfile::with(['apiKey', 'user'])->find($this->reviewProfileId);
 
-        if (!$profile) {
+        if (! $profile) {
             session()->flash('error', 'Profile not found.');
             $this->closeReviewModal();
+
             return;
         }
 
         // Verify profile is awaiting review
-        if (!$profile->isAwaitingReview()) {
+        if (! $profile->isAwaitingReview()) {
             session()->flash('error', 'This profile is not awaiting review.');
             $this->closeReviewModal();
+
             return;
         }
 
@@ -144,7 +197,7 @@ class KycProfiles extends Component
             ->latest();
 
         // Filter by user for standard users
-        if (!$this->isAdmin) {
+        if (! $this->isAdmin) {
             $query->where('user_id', auth()->id());
         }
 
@@ -182,7 +235,7 @@ class KycProfiles extends Component
 
         // Count profiles awaiting review for badge
         $awaitingReviewCount = KYCProfile::query()
-            ->when(!$this->isAdmin, fn($q) => $q->where('user_id', auth()->id()))
+            ->when(! $this->isAdmin, fn ($q) => $q->where('user_id', auth()->id()))
             ->whereIn('status', [
                 KycStatuseEnum::PROVIDER_APPROVED->value,
                 KycStatuseEnum::PROVIDER_REJECTED->value,
