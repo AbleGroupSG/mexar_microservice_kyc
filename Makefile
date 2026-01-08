@@ -10,7 +10,7 @@ ENV_FILE_PROD=.env.prod
 
 # build the Docker image
 build:
-	docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) -f docker/app/Dockerfile .
+	docker build --platform linux/amd64,linux/arm64 -t $(DOCKER_IMAGE):$(DOCKER_TAG) -f docker/Dockerfile .
 
 # push the Docker image to the registry
 push:
