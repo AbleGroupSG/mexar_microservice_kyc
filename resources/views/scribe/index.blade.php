@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Laravel API Documentation</title>
+    <title>MEXAR KYC MSA API Documentation</title>
 
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 
@@ -26,7 +26,7 @@
             </style>
 
     <script>
-        var tryItOutBaseUrl = "http://localhost:9000";
+        var tryItOutBaseUrl = "http://localhost:8888";
         var useCsrf = Boolean();
         var csrfUrl = "/sanctum/csrf-cookie";
     </script>
@@ -81,8 +81,8 @@
                     <a href="#entity-onboarding">Entity Onboarding</a>
                 </li>
                                     <ul id="tocify-subheader-entity-onboarding" class="tocify-subheader">
-                                                    <li class="tocify-item level-2" data-unique="entity-onboarding-POSTapi-e-form-onboarding">
-                                <a href="#entity-onboarding-POSTapi-e-form-onboarding">Submit individual onboarding check</a>
+                                                    <li class="tocify-item level-2" data-unique="entity-onboarding-POSTapi-v1-e-form-onboarding">
+                                <a href="#entity-onboarding-POSTapi-v1-e-form-onboarding">Submit individual onboarding check</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -91,8 +91,8 @@
                     <a href="#kyb-screening">KYB Screening</a>
                 </li>
                                     <ul id="tocify-subheader-kyb-screening" class="tocify-subheader">
-                                                    <li class="tocify-item level-2" data-unique="kyb-screening-POSTapi-e-form-kyb">
-                                <a href="#kyb-screening-POSTapi-e-form-kyb">Submit KYB screening request</a>
+                                                    <li class="tocify-item level-2" data-unique="kyb-screening-POSTapi-v1-e-form-kyb">
+                                <a href="#kyb-screening-POSTapi-v1-e-form-kyb">Submit KYB screening request</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -101,11 +101,11 @@
                     <a href="#kyc-screening">KYC Screening</a>
                 </li>
                                     <ul id="tocify-subheader-kyc-screening" class="tocify-subheader">
-                                                    <li class="tocify-item level-2" data-unique="kyc-screening-POSTapi-screen">
-                                <a href="#kyc-screening-POSTapi-screen">Submit KYC screening request</a>
+                                                    <li class="tocify-item level-2" data-unique="kyc-screening-POSTapi-v1-screen">
+                                <a href="#kyc-screening-POSTapi-v1-screen">Submit KYC screening request</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="kyc-screening-GETapi-status--uuid-">
-                                <a href="#kyc-screening-GETapi-status--uuid-">Get KYC screening status</a>
+                                                                                <li class="tocify-item level-2" data-unique="kyc-screening-GETapi-v1-status--uuid-">
+                                <a href="#kyc-screening-GETapi-v1-status--uuid-">Get KYC screening status</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -119,6 +119,16 @@
                             </li>
                                                                         </ul>
                             </ul>
+                    <ul id="tocify-header-system-information" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="system-information">
+                    <a href="#system-information">System Information</a>
+                </li>
+                                    <ul id="tocify-subheader-system-information" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="system-information-GETapi-v1-providers">
+                                <a href="#system-information-GETapi-v1-providers">List KYC Providers</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
             </div>
 
     <ul class="toc-footer" id="toc-footer">
@@ -128,7 +138,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: October 27, 2025</li>
+        <li>Last updated: January 6, 2026</li>
     </ul>
 </div>
 
@@ -137,7 +147,7 @@
     <div class="content">
         <h1 id="introduction">Introduction</h1>
 <aside>
-    <strong>Base URL</strong>: <code>http://localhost:9000</code>
+    <strong>Base URL</strong>: <code>http://localhost:8888</code>
 </aside>
 <pre><code>This documentation aims to provide all the information you need to work with our API.
 
@@ -164,14 +174,14 @@ You can switch the language used with the tabs at the top right (or from the nav
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:9000/api/user" \
+    --get "http://localhost:8888/api/user" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:9000/api/user"
+    "http://localhost:8888/api/user"
 );
 
 const headers = {
@@ -281,20 +291,20 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="entity-onboarding-POSTapi-e-form-onboarding">Submit individual onboarding check</h2>
+                                <h2 id="entity-onboarding-POSTapi-v1-e-form-onboarding">Submit individual onboarding check</h2>
 
 <p>
 </p>
 
 <p>Performs compliance screening for individual entity onboarding using RegTank. This endpoint checks individuals against sanctions lists, PEP databases, and adverse media for customer due diligence and compliance purposes.</p>
 
-<span id="example-requests-POSTapi-e-form-onboarding">
+<span id="example-requests-POSTapi-v1-e-form-onboarding">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:9000/api/e-form-onboarding" \
+    "http://localhost:8888/api/v1/e-form-onboarding" \
     --header "X-API-KEY: Your API key for authentication" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -314,7 +324,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:9000/api/e-form-onboarding"
+    "http://localhost:8888/api/v1/e-form-onboarding"
 );
 
 const headers = {
@@ -343,7 +353,7 @@ fetch(url, {
 
 </span>
 
-<span id="example-responses-POSTapi-e-form-onboarding">
+<span id="example-responses-POSTapi-v1-e-form-onboarding">
             <blockquote>
             <p>Example response (200, Onboarding screening request successfully submitted to RegTank):</p>
         </blockquote>
@@ -399,43 +409,43 @@ fetch(url, {
 }</code>
  </pre>
     </span>
-<span id="execution-results-POSTapi-e-form-onboarding" hidden>
+<span id="execution-results-POSTapi-v1-e-form-onboarding" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-POSTapi-e-form-onboarding"></span>:
+                id="execution-response-status-POSTapi-v1-e-form-onboarding"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-POSTapi-e-form-onboarding"
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-e-form-onboarding"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-POSTapi-e-form-onboarding" hidden>
+<span id="execution-error-POSTapi-v1-e-form-onboarding" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-POSTapi-e-form-onboarding">
+    <pre><code id="execution-error-message-POSTapi-v1-e-form-onboarding">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-POSTapi-e-form-onboarding" data-method="POST"
-      data-path="api/e-form-onboarding"
+<form id="form-POSTapi-v1-e-form-onboarding" data-method="POST"
+      data-path="api/v1/e-form-onboarding"
       data-authed="0"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('POSTapi-e-form-onboarding', this);">
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-e-form-onboarding', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-POSTapi-e-form-onboarding"
-                    onclick="tryItOut('POSTapi-e-form-onboarding');">Try it out ⚡
+                    id="btn-tryout-POSTapi-v1-e-form-onboarding"
+                    onclick="tryItOut('POSTapi-v1-e-form-onboarding');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-POSTapi-e-form-onboarding"
-                    onclick="cancelTryOut('POSTapi-e-form-onboarding');" hidden>Cancel 🛑
+                    id="btn-canceltryout-POSTapi-v1-e-form-onboarding"
+                    onclick="cancelTryOut('POSTapi-v1-e-form-onboarding');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-POSTapi-e-form-onboarding"
+                    id="btn-executetryout-POSTapi-v1-e-form-onboarding"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
@@ -443,7 +453,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </h3>
             <p>
             <small class="badge badge-black">POST</small>
-            <b><code>api/e-form-onboarding</code></b>
+            <b><code>api/v1/e-form-onboarding</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
@@ -452,7 +462,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="X-API-KEY"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="X-API-KEY"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="Your API key for authentication"
                data-component="header">
     <br>
@@ -464,7 +474,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="application/json"
                data-component="header">
     <br>
@@ -476,7 +486,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="Accept"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="application/json"
                data-component="header">
     <br>
@@ -489,7 +499,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="email"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="email"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="john.doe@example.com"
                data-component="body">
     <br>
@@ -501,7 +511,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="surname"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="surname"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="Doe"
                data-component="body">
     <br>
@@ -513,7 +523,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="forename"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="forename"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="John"
                data-component="body">
     <br>
@@ -525,7 +535,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="countryOfResidence"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="countryOfResidence"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="SG"
                data-component="body">
     <br>
@@ -537,7 +547,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="placeOfBirth"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="placeOfBirth"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="Singapore"
                data-component="body">
     <br>
@@ -549,7 +559,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="nationality"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="nationality"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="SG"
                data-component="body">
     <br>
@@ -561,7 +571,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="idIssuingCountry"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="idIssuingCountry"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="SG"
                data-component="body">
     <br>
@@ -573,7 +583,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="dateOfBirth"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="dateOfBirth"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="1985-03-15"
                data-component="body">
     <br>
@@ -585,7 +595,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="gender"                data-endpoint="POSTapi-e-form-onboarding"
+                              name="gender"                data-endpoint="POSTapi-v1-e-form-onboarding"
                value="Male"
                data-component="body">
     <br>
@@ -597,20 +607,20 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="kyb-screening-POSTapi-e-form-kyb">Submit KYB screening request</h2>
+                                <h2 id="kyb-screening-POSTapi-v1-e-form-kyb">Submit KYB screening request</h2>
 
 <p>
 </p>
 
 <p>Initiates a KYB (Know Your Business) screening process for company verification using RegTank's Dow Jones database. This endpoint screens businesses against sanctions lists, adverse media, and politically exposed persons databases.</p>
 
-<span id="example-requests-POSTapi-e-form-kyb">
+<span id="example-requests-POSTapi-v1-e-form-kyb">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:9000/api/e-form-kyb" \
+    "http://localhost:8888/api/v1/e-form-kyb" \
     --header "X-API-KEY: Your API key for authentication" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -629,7 +639,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:9000/api/e-form-kyb"
+    "http://localhost:8888/api/v1/e-form-kyb"
 );
 
 const headers = {
@@ -657,7 +667,7 @@ fetch(url, {
 
 </span>
 
-<span id="example-responses-POSTapi-e-form-kyb">
+<span id="example-responses-POSTapi-v1-e-form-kyb">
             <blockquote>
             <p>Example response (200, KYB screening request successfully submitted to RegTank):</p>
         </blockquote>
@@ -733,43 +743,43 @@ fetch(url, {
 }</code>
  </pre>
     </span>
-<span id="execution-results-POSTapi-e-form-kyb" hidden>
+<span id="execution-results-POSTapi-v1-e-form-kyb" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-POSTapi-e-form-kyb"></span>:
+                id="execution-response-status-POSTapi-v1-e-form-kyb"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-POSTapi-e-form-kyb"
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-e-form-kyb"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-POSTapi-e-form-kyb" hidden>
+<span id="execution-error-POSTapi-v1-e-form-kyb" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-POSTapi-e-form-kyb">
+    <pre><code id="execution-error-message-POSTapi-v1-e-form-kyb">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-POSTapi-e-form-kyb" data-method="POST"
-      data-path="api/e-form-kyb"
+<form id="form-POSTapi-v1-e-form-kyb" data-method="POST"
+      data-path="api/v1/e-form-kyb"
       data-authed="0"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('POSTapi-e-form-kyb', this);">
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-e-form-kyb', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-POSTapi-e-form-kyb"
-                    onclick="tryItOut('POSTapi-e-form-kyb');">Try it out ⚡
+                    id="btn-tryout-POSTapi-v1-e-form-kyb"
+                    onclick="tryItOut('POSTapi-v1-e-form-kyb');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-POSTapi-e-form-kyb"
-                    onclick="cancelTryOut('POSTapi-e-form-kyb');" hidden>Cancel 🛑
+                    id="btn-canceltryout-POSTapi-v1-e-form-kyb"
+                    onclick="cancelTryOut('POSTapi-v1-e-form-kyb');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-POSTapi-e-form-kyb"
+                    id="btn-executetryout-POSTapi-v1-e-form-kyb"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
@@ -777,7 +787,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </h3>
             <p>
             <small class="badge badge-black">POST</small>
-            <b><code>api/e-form-kyb</code></b>
+            <b><code>api/v1/e-form-kyb</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
@@ -786,7 +796,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="X-API-KEY"                data-endpoint="POSTapi-e-form-kyb"
+                              name="X-API-KEY"                data-endpoint="POSTapi-v1-e-form-kyb"
                value="Your API key for authentication"
                data-component="header">
     <br>
@@ -798,7 +808,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="POSTapi-e-form-kyb"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-e-form-kyb"
                value="application/json"
                data-component="header">
     <br>
@@ -810,7 +820,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="POSTapi-e-form-kyb"
+                              name="Accept"                data-endpoint="POSTapi-v1-e-form-kyb"
                value="application/json"
                data-component="header">
     <br>
@@ -823,7 +833,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="referenceId"                data-endpoint="POSTapi-e-form-kyb"
+                              name="referenceId"                data-endpoint="POSTapi-v1-e-form-kyb"
                value="COMPANY-REF-123"
                data-component="body">
     <br>
@@ -835,7 +845,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="businessName"                data-endpoint="POSTapi-e-form-kyb"
+                              name="businessName"                data-endpoint="POSTapi-v1-e-form-kyb"
                value="Acme Corporation Ltd"
                data-component="body">
     <br>
@@ -847,7 +857,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="businessIdNumber"                data-endpoint="POSTapi-e-form-kyb"
+                              name="businessIdNumber"                data-endpoint="POSTapi-v1-e-form-kyb"
                value="123456789"
                data-component="body">
     <br>
@@ -859,7 +869,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="address1"                data-endpoint="POSTapi-e-form-kyb"
+                              name="address1"                data-endpoint="POSTapi-v1-e-form-kyb"
                value="123 Business Street, Suite 100"
                data-component="body">
     <br>
@@ -871,7 +881,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="email"                data-endpoint="POSTapi-e-form-kyb"
+                              name="email"                data-endpoint="POSTapi-v1-e-form-kyb"
                value="contact@acme.com"
                data-component="body">
     <br>
@@ -883,7 +893,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="phone"                data-endpoint="POSTapi-e-form-kyb"
+                              name="phone"                data-endpoint="POSTapi-v1-e-form-kyb"
                value="+1-555-0123"
                data-component="body">
     <br>
@@ -895,7 +905,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="website"                data-endpoint="POSTapi-e-form-kyb"
+                              name="website"                data-endpoint="POSTapi-v1-e-form-kyb"
                value="https://www.acme.com"
                data-component="body">
     <br>
@@ -907,7 +917,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="dateOfIncorporation"                data-endpoint="POSTapi-e-form-kyb"
+                              name="dateOfIncorporation"                data-endpoint="POSTapi-v1-e-form-kyb"
                value="2010-05-15"
                data-component="body">
     <br>
@@ -919,20 +929,20 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="kyc-screening-POSTapi-screen">Submit KYC screening request</h2>
+                                <h2 id="kyc-screening-POSTapi-v1-screen">Submit KYC screening request</h2>
 
 <p>
 </p>
 
 <p>Initiates an asynchronous KYC (Know Your Customer) screening process. This endpoint creates a KYC profile with PENDING status and returns a reference ID immediately. The actual verification is processed asynchronously by the selected provider (RegTank or GlairAI). Once processing completes, a webhook notification will be sent to your configured webhook URL, and you can also poll the status endpoint.</p>
 
-<span id="example-requests-POSTapi-screen">
+<span id="example-requests-POSTapi-v1-screen">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:9000/api/screen" \
+    "http://localhost:8888/api/v1/screen" \
     --header "X-API-KEY: Your API key for authentication" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -966,7 +976,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"meta\": {
         \"service_provider\": \"regtank\",
         \"reference_id\": \"YOUR-REF-123\",
-        \"status\": \"architecto\"
+        \"status\": \"architecto\",
+        \"test\": false
     }
 }"
 </code></pre></div>
@@ -974,7 +985,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:9000/api/screen"
+    "http://localhost:8888/api/v1/screen"
 );
 
 const headers = {
@@ -1013,7 +1024,8 @@ let body = {
     "meta": {
         "service_provider": "regtank",
         "reference_id": "YOUR-REF-123",
-        "status": "architecto"
+        "status": "architecto",
+        "test": false
     }
 };
 
@@ -1025,7 +1037,7 @@ fetch(url, {
 
 </span>
 
-<span id="example-responses-POSTapi-screen">
+<span id="example-responses-POSTapi-v1-screen">
             <blockquote>
             <p>Example response (200, KYC screening request accepted. The identity field contains the UUID for status polling. Use GET /api/status/{uuid} to check the screening status, or wait for webhook notification to your configured webhook URL.):</p>
         </blockquote>
@@ -1112,43 +1124,43 @@ fetch(url, {
 }</code>
  </pre>
     </span>
-<span id="execution-results-POSTapi-screen" hidden>
+<span id="execution-results-POSTapi-v1-screen" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-POSTapi-screen"></span>:
+                id="execution-response-status-POSTapi-v1-screen"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-POSTapi-screen"
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-screen"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-POSTapi-screen" hidden>
+<span id="execution-error-POSTapi-v1-screen" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-POSTapi-screen">
+    <pre><code id="execution-error-message-POSTapi-v1-screen">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-POSTapi-screen" data-method="POST"
-      data-path="api/screen"
+<form id="form-POSTapi-v1-screen" data-method="POST"
+      data-path="api/v1/screen"
       data-authed="0"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('POSTapi-screen', this);">
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-screen', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-POSTapi-screen"
-                    onclick="tryItOut('POSTapi-screen');">Try it out ⚡
+                    id="btn-tryout-POSTapi-v1-screen"
+                    onclick="tryItOut('POSTapi-v1-screen');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-POSTapi-screen"
-                    onclick="cancelTryOut('POSTapi-screen');" hidden>Cancel 🛑
+                    id="btn-canceltryout-POSTapi-v1-screen"
+                    onclick="cancelTryOut('POSTapi-v1-screen');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-POSTapi-screen"
+                    id="btn-executetryout-POSTapi-v1-screen"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
@@ -1156,7 +1168,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </h3>
             <p>
             <small class="badge badge-black">POST</small>
-            <b><code>api/screen</code></b>
+            <b><code>api/v1/screen</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
@@ -1165,7 +1177,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="X-API-KEY"                data-endpoint="POSTapi-screen"
+                              name="X-API-KEY"                data-endpoint="POSTapi-v1-screen"
                value="Your API key for authentication"
                data-component="header">
     <br>
@@ -1177,7 +1189,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="POSTapi-screen"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-screen"
                value="application/json"
                data-component="header">
     <br>
@@ -1189,7 +1201,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="POSTapi-screen"
+                              name="Accept"                data-endpoint="POSTapi-v1-screen"
                value="application/json"
                data-component="header">
     <br>
@@ -1212,7 +1224,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="personal_info.first_name"                data-endpoint="POSTapi-screen"
+                              name="personal_info.first_name"                data-endpoint="POSTapi-v1-screen"
                value="John"
                data-component="body">
     <br>
@@ -1224,7 +1236,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="personal_info.last_name"                data-endpoint="POSTapi-screen"
+                              name="personal_info.last_name"                data-endpoint="POSTapi-v1-screen"
                value="Doe"
                data-component="body">
     <br>
@@ -1236,7 +1248,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="personal_info.gender"                data-endpoint="POSTapi-screen"
+                              name="personal_info.gender"                data-endpoint="POSTapi-v1-screen"
                value="Male"
                data-component="body">
     <br>
@@ -1248,7 +1260,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="personal_info.date_of_birth"                data-endpoint="POSTapi-screen"
+                              name="personal_info.date_of_birth"                data-endpoint="POSTapi-v1-screen"
                value="1990-01-15"
                data-component="body">
     <br>
@@ -1260,7 +1272,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="personal_info.nationality"                data-endpoint="POSTapi-screen"
+                              name="personal_info.nationality"                data-endpoint="POSTapi-v1-screen"
                value="ID"
                data-component="body">
     <br>
@@ -1284,7 +1296,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="identification.id_type"                data-endpoint="POSTapi-screen"
+                              name="identification.id_type"                data-endpoint="POSTapi-v1-screen"
                value="national_id"
                data-component="body">
     <br>
@@ -1296,7 +1308,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="identification.id_number"                data-endpoint="POSTapi-screen"
+                              name="identification.id_number"                data-endpoint="POSTapi-v1-screen"
                value="1234567890123456"
                data-component="body">
     <br>
@@ -1308,7 +1320,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="identification.issuing_country"                data-endpoint="POSTapi-screen"
+                              name="identification.issuing_country"                data-endpoint="POSTapi-v1-screen"
                value="ID"
                data-component="body">
     <br>
@@ -1320,7 +1332,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="identification.issue_date"                data-endpoint="POSTapi-screen"
+                              name="identification.issue_date"                data-endpoint="POSTapi-v1-screen"
                value="2020-01-01"
                data-component="body">
     <br>
@@ -1332,7 +1344,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="identification.expiry_date"                data-endpoint="POSTapi-screen"
+                              name="identification.expiry_date"                data-endpoint="POSTapi-v1-screen"
                value="2030-01-01"
                data-component="body">
     <br>
@@ -1356,7 +1368,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="address.street"                data-endpoint="POSTapi-screen"
+                              name="address.street"                data-endpoint="POSTapi-v1-screen"
                value="Jl. Sudirman"
                data-component="body">
     <br>
@@ -1368,7 +1380,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="address.city"                data-endpoint="POSTapi-screen"
+                              name="address.city"                data-endpoint="POSTapi-v1-screen"
                value="Jakarta"
                data-component="body">
     <br>
@@ -1380,7 +1392,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="address.state"                data-endpoint="POSTapi-screen"
+                              name="address.state"                data-endpoint="POSTapi-v1-screen"
                value="DKI Jakarta"
                data-component="body">
     <br>
@@ -1392,7 +1404,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="address.postal_code"                data-endpoint="POSTapi-screen"
+                              name="address.postal_code"                data-endpoint="POSTapi-v1-screen"
                value="12190"
                data-component="body">
     <br>
@@ -1404,7 +1416,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="address.country"                data-endpoint="POSTapi-screen"
+                              name="address.country"                data-endpoint="POSTapi-v1-screen"
                value="ID"
                data-component="body">
     <br>
@@ -1416,7 +1428,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="address.address_line"                data-endpoint="POSTapi-screen"
+                              name="address.address_line"                data-endpoint="POSTapi-v1-screen"
                value="Jl. Sudirman No. 123"
                data-component="body">
     <br>
@@ -1440,7 +1452,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="contact.email"                data-endpoint="POSTapi-screen"
+                              name="contact.email"                data-endpoint="POSTapi-v1-screen"
                value="john.doe@example.com"
                data-component="body">
     <br>
@@ -1452,7 +1464,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="contact.phone"                data-endpoint="POSTapi-screen"
+                              name="contact.phone"                data-endpoint="POSTapi-v1-screen"
                value="+62812345678"
                data-component="body">
     <br>
@@ -1476,7 +1488,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="meta.service_provider"                data-endpoint="POSTapi-screen"
+                              name="meta.service_provider"                data-endpoint="POSTapi-v1-screen"
                value="regtank"
                data-component="body">
     <br>
@@ -1488,7 +1500,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="meta.reference_id"                data-endpoint="POSTapi-screen"
+                              name="meta.reference_id"                data-endpoint="POSTapi-v1-screen"
                value="YOUR-REF-123"
                data-component="body">
     <br>
@@ -1500,30 +1512,52 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="meta.status"                data-endpoint="POSTapi-screen"
+                              name="meta.status"                data-endpoint="POSTapi-v1-screen"
                value="architecto"
                data-component="body">
     <br>
 <p>Optional status override (for internal use) Example: <code>architecto</code></p>
                     </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>test</code></b>&nbsp;&nbsp;
+<small>boolean</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <label data-endpoint="POSTapi-v1-screen" style="display: none">
+            <input type="radio" name="meta.test"
+                   value="true"
+                   data-endpoint="POSTapi-v1-screen"
+                   data-component="body"             >
+            <code>true</code>
+        </label>
+        <label data-endpoint="POSTapi-v1-screen" style="display: none">
+            <input type="radio" name="meta.test"
+                   value="false"
+                   data-endpoint="POSTapi-v1-screen"
+                   data-component="body"             >
+            <code>false</code>
+        </label>
+    <br>
+<p>Example: <code>false</code></p>
+                    </div>
                                     </details>
         </div>
         </form>
 
-                    <h2 id="kyc-screening-GETapi-status--uuid-">Get KYC screening status</h2>
+                    <h2 id="kyc-screening-GETapi-v1-status--uuid-">Get KYC screening status</h2>
 
 <p>
 </p>
 
 <p>Retrieve the current status of a KYC screening request by UUID. Use this endpoint to poll for screening results after submitting a KYC request. The status will be 'pending' initially, then change to 'approved', 'rejected', or 'error' once the provider completes processing.</p>
 
-<span id="example-requests-GETapi-status--uuid-">
+<span id="example-requests-GETapi-v1-status--uuid-">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:9000/api/status/550e8400-e29b-41d4-a716-446655440000" \
+    --get "http://localhost:8888/api/v1/status/550e8400-e29b-41d4-a716-446655440000" \
     --header "X-API-KEY: Your API key for authentication" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -1531,7 +1565,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:9000/api/status/550e8400-e29b-41d4-a716-446655440000"
+    "http://localhost:8888/api/v1/status/550e8400-e29b-41d4-a716-446655440000"
 );
 
 const headers = {
@@ -1547,7 +1581,7 @@ fetch(url, {
 
 </span>
 
-<span id="example-responses-GETapi-status--uuid-">
+<span id="example-responses-GETapi-v1-status--uuid-">
             <blockquote>
             <p>Example response (200, Status retrieved successfully. Status values: pending (processing), approved (verified), rejected (failed verification), error (provider error)):</p>
         </blockquote>
@@ -1623,43 +1657,43 @@ fetch(url, {
 }</code>
  </pre>
     </span>
-<span id="execution-results-GETapi-status--uuid-" hidden>
+<span id="execution-results-GETapi-v1-status--uuid-" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-GETapi-status--uuid-"></span>:
+                id="execution-response-status-GETapi-v1-status--uuid-"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-GETapi-status--uuid-"
+    <pre class="json"><code id="execution-response-content-GETapi-v1-status--uuid-"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-GETapi-status--uuid-" hidden>
+<span id="execution-error-GETapi-v1-status--uuid-" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-GETapi-status--uuid-">
+    <pre><code id="execution-error-message-GETapi-v1-status--uuid-">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-GETapi-status--uuid-" data-method="GET"
-      data-path="api/status/{uuid}"
+<form id="form-GETapi-v1-status--uuid-" data-method="GET"
+      data-path="api/v1/status/{uuid}"
       data-authed="0"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('GETapi-status--uuid-', this);">
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-status--uuid-', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-GETapi-status--uuid-"
-                    onclick="tryItOut('GETapi-status--uuid-');">Try it out ⚡
+                    id="btn-tryout-GETapi-v1-status--uuid-"
+                    onclick="tryItOut('GETapi-v1-status--uuid-');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-GETapi-status--uuid-"
-                    onclick="cancelTryOut('GETapi-status--uuid-');" hidden>Cancel 🛑
+                    id="btn-canceltryout-GETapi-v1-status--uuid-"
+                    onclick="cancelTryOut('GETapi-v1-status--uuid-');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-GETapi-status--uuid-"
+                    id="btn-executetryout-GETapi-v1-status--uuid-"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
@@ -1667,7 +1701,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </h3>
             <p>
             <small class="badge badge-green">GET</small>
-            <b><code>api/status/{uuid}</code></b>
+            <b><code>api/v1/status/{uuid}</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
@@ -1676,7 +1710,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="X-API-KEY"                data-endpoint="GETapi-status--uuid-"
+                              name="X-API-KEY"                data-endpoint="GETapi-v1-status--uuid-"
                value="Your API key for authentication"
                data-component="header">
     <br>
@@ -1688,7 +1722,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="GETapi-status--uuid-"
+                              name="Content-Type"                data-endpoint="GETapi-v1-status--uuid-"
                value="application/json"
                data-component="header">
     <br>
@@ -1700,7 +1734,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="GETapi-status--uuid-"
+                              name="Accept"                data-endpoint="GETapi-v1-status--uuid-"
                value="application/json"
                data-component="header">
     <br>
@@ -1713,7 +1747,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="uuid"                data-endpoint="GETapi-status--uuid-"
+                              name="uuid"                data-endpoint="GETapi-v1-status--uuid-"
                value="550e8400-e29b-41d4-a716-446655440000"
                data-component="url">
     <br>
@@ -1738,7 +1772,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:9000/api/v1/ocr" \
+    "http://localhost:8888/api/v1/ocr" \
     --header "Authorization: JWT Bearer token for authentication" \
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
@@ -1747,12 +1781,12 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "options[lang]=id"\
     --form "options[detect_orientation]=1"\
     --form "meta[test]="\
-    --form "image=@/private/var/folders/vb/mvc67p5d5jx6n1wbfv9d2gpr0000gn/T/phprkfvtq9pjn1v8RuCgoR" </code></pre></div>
+    --form "image=@/private/var/folders/vb/mvc67p5d5jx6n1wbfv9d2gpr0000gn/T/phpif9052gs77vtc1W73fA" </code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:9000/api/v1/ocr"
+    "http://localhost:8888/api/v1/ocr"
 );
 
 const headers = {
@@ -1995,7 +2029,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Image file of the document (jpeg, png, jpg, gif, svg). Max size: 2MB Example: <code>/private/var/folders/vb/mvc67p5d5jx6n1wbfv9d2gpr0000gn/T/phprkfvtq9pjn1v8RuCgoR</code></p>
+<p>Image file of the document (jpeg, png, jpg, gif, svg). Max size: 2MB Example: <code>/private/var/folders/vb/mvc67p5d5jx6n1wbfv9d2gpr0000gn/T/phpif9052gs77vtc1W73fA</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
         <details>
@@ -2100,6 +2134,138 @@ You can check the Dev Tools console for debugging information.</code></pre>
                                     </details>
         </div>
         </form>
+
+                <h1 id="system-information">System Information</h1>
+
+    
+
+                                <h2 id="system-information-GETapi-v1-providers">List KYC Providers</h2>
+
+<p>
+</p>
+
+<p>Retrieve all available KYC service providers</p>
+
+<span id="example-requests-GETapi-v1-providers">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost:8888/api/v1/providers" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost:8888/api/v1/providers"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-providers">
+            <blockquote>
+            <p>Example response (200, Successful response with provider list):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;meta&quot;: {
+        &quot;code&quot;: 200,
+        &quot;message&quot;: &quot;Success&quot;,
+        &quot;request_id&quot;: &quot;uuid&quot;
+    },
+    &quot;data&quot;: [
+        &quot;regtank&quot;,
+        &quot;glair_ai&quot;,
+        &quot;test&quot;
+    ]
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-providers" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-providers"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-providers"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-providers" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-providers">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-providers" data-method="GET"
+      data-path="api/v1/providers"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-providers', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-providers"
+                    onclick="tryItOut('GETapi-v1-providers');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-providers"
+                    onclick="cancelTryOut('GETapi-v1-providers');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-providers"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/providers</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-providers"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-providers"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
 
             
 
