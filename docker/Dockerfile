@@ -29,7 +29,8 @@ RUN set -eux; \
     ln -s /usr/include/freetype2 /usr/include/freetype; \
     docker-php-ext-configure gd --with-freetype=/usr/include/freetype --with-jpeg=/usr/include; \
     docker-php-ext-install -j"$(nproc)" gd pdo_mysql mbstring exif pcntl bcmath zip opcache intl sockets; \
-    pecl install redis-5.3.7 amqp-1.11.0; \
+    pecl install redis && \
+    pecl install amqp && \
     docker-php-ext-enable redis amqp; \
     apk del --no-network .build-deps $PHPIZE_DEPS; \
     rm -rf /var/cache/apk/* /tmp/*

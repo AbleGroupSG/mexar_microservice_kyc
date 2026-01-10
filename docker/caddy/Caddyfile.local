@@ -1,0 +1,21 @@
+kyc.local {
+    tls internal
+    encode zstd gzip
+
+    # forward all the requests only keeps one healthz endpoint
+    @all {
+        not path /healthz
+    }
+    respond /healthz 200
+
+    # forward all the request to php fpm
+    reverse_proxy @all app:9000 {
+        transport fastcgi {
+            # tell FPM the entry script is index.php
+            env SCRIPT_FILENAME /var/www/public/index.php
+            env SCRIPT_NAME /index.php
+            root /var/www/public
+            split .php
+        }
+    }
+}

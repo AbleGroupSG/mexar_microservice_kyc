@@ -1,26 +1,83 @@
 services:
   app:
-    image: mrsuner/mexar-msa-kyc:latest
+    image: ${DOCKER_IMAGE:-your-dockerhub-username/mexar-kyc}:${IMAGE_TAG:-latest}
     restart: unless-stopped
-    env_file:
-      - .env.prod
-    volumes:
-      - storage:/var/www/storage    
-  nginx:
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.laravel.rule=Host(`${PUBLIC_DOMAIN_NAME}`)"
-      - "traefik.http.routers.laravel.entrypoints=websecure"
-      - "traefik.http.routers.laravel.tls.certresolver=letsencrypt"
-      - "traefik.http.services.laravel.loadbalancer.server.port=80"
+    env_file: .env.prod
+    command: php-fpm
+    environment:
+      RUN_MIGRATE: "true"
+    networks:
+      - backend
+    depends_on:
+      - mysql
+      - redis
 
-  traefik:
-    command:
-      - "--api.insecure=false"
-      - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=${WEBMASTER_EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+  mysql:
+    image: mysql:8.4.7
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - backend
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    networks:
+      - backend
+
+  queue:
+    image: ${DOCKER_IMAGE:-your-dockerhub-username/mexar-kyc}:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      RUN_MIGRATE: "false"
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=180
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - backend
+
+  scheduler:
+    image: ${DOCKER_IMAGE:-your-dockerhub-username/mexar-kyc}:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      RUN_MIGRATE: "false"
+    command: /usr/local/bin/run-scheduler.sh
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - backend
+
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:-kyc.local}
+      WEBMASTER_EMAIL: ${WEBMASTER_EMAIL:-admin@example.com}
+    volumes:
+      - ./docker/caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - backend
+
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  backend:
+    driver: bridge

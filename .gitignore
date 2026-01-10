@@ -10,9 +10,12 @@
 /storage/pail
 /app/Console/Commands/TCommand.php
 /vendor
+# Environment files (all ignored except .example templates)
 .env
-.env.backup
-.env.production
+.env.*
+!.env.example
+!.env.docker.example
+!.env.prod.example
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
