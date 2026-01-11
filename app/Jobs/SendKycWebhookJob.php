@@ -207,11 +207,12 @@ class SendKycWebhookJob implements ShouldQueue
 
         return [
             'event' => 'kyc.status.changed',
+            'platform' => config('app.mexar.webhook_platform_slug', 'kyc-msa'),
             'payload' => [
                 'msa_reference_id' => $profile->id,
                 'provider_reference_id' => $profile->provider_reference_id,
                 'reference_id' => $userDataDTO->meta->reference_id ?? null,
-                'platform' => config('app.mexar.webhook_platform_slug', 'kyc-msa'),
+                'platform'  =>  $profile->provider,
                 'status' => $profile->status->value,
                 'verified' => $profile->status === KycStatuseEnum::APPROVED,
                 'verified_at' => $verifiedAt,
