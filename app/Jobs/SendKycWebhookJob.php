@@ -84,9 +84,10 @@ class SendKycWebhookJob implements ShouldQueue
             // Build webhook payload
             $payload = $this->buildPayload($profile);
 
-            Log::info('SendKycWebhook: Sending webhook', [
+            logger()->debug('SendKycWebhook: Sending webhook', [
                 'profile_id' => $profile->id,
                 'webhook_url' => $webhookUrl,
+                'payload' => json_encode($payload),
                 'status' => $profile->status->value,
                 'attempt' => $this->attempts(),
             ]);
@@ -105,7 +106,7 @@ class SendKycWebhookJob implements ShouldQueue
                 $headers['X-Webhook-Signature'] = $signature;
                 $headers['X-Webhook-Timestamp'] = (string) $timestamp;
 
-                Log::debug('SendKycWebhook: Signature generated', [
+                logger()->debug('SendKycWebhook: Signature generated', [
                     'profile_id' => $profile->id,
                     'timestamp' => $timestamp,
                 ]);
