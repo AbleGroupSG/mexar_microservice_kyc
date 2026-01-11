@@ -92,12 +92,14 @@ class SendKycWebhookJob implements ShouldQueue
             ]);
 
             // Build request headers with optional signature
-            $headers = [];
+            $headers = [
+                'Content-Type' => 'application/json',
+            ];
             $signatureKey = $profile->apiKey->signature_key;
+            $payloadJson = json_encode($payload);
 
             if ($signatureKey) {
                 $timestamp = time();
-                $payloadJson = json_encode($payload);
                 $signature = hash_hmac('sha256', $timestamp . '.' . $payloadJson, $signatureKey);
 
                 $headers['X-Webhook-Signature'] = $signature;
@@ -112,7 +114,8 @@ class SendKycWebhookJob implements ShouldQueue
             // Send webhook with 30-second timeout
             $response = Http::timeout(30)
                 ->withHeaders($headers)
-                ->post($webhookUrl, $payload);
+                ->withBody($payloadJson, 'application/json')
+                ->post($webhookUrl);
 
             if (! $response->successful()) {
                 Log::error('SendKycWebhook: Failed to send webhook', [
