@@ -168,6 +168,16 @@
                                         Reject
                                     </button>
                                 @endif
+                                @if (in_array($profile->status?->value, ['approved', 'rejected']) && ($isAdmin || $profile->user_id === auth()->id()))
+                                    <button
+                                        wire:click="resendWebhook('{{ $profile->id }}')"
+                                        wire:loading.attr="disabled"
+                                        class="btn btn-outline btn-xs"
+                                        title="Resend webhook notification"
+                                    >
+                                        Resend
+                                    </button>
+                                @endif
                             </div>
                         </td>
                     </tr>

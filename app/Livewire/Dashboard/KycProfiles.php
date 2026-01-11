@@ -3,6 +3,7 @@
 namespace App\Livewire\Dashboard;
 
 use App\Enums\KycStatuseEnum;
+use App\Jobs\SendKycWebhookJob;
 use App\Models\KYCProfile;
 use App\Services\KYC\KycWorkflowService;
 use Livewire\Attributes\Layout;
@@ -176,6 +177,39 @@ class KycProfiles extends Component
 
         $statusLabel = $this->reviewAction === 'approve' ? 'approved' : 'rejected';
         session()->flash('success', "Profile {$statusLabel} successfully. Webhook dispatched.");
+    }
+
+    /**
+     * Resend webhook notification for a profile.
+     * Only available for profiles with final status (approved/rejected).
+     */
+    public function resendWebhook(string $profileId): void
+    {
+        $profile = KYCProfile::with(['apiKey', 'user'])->find($profileId);
+
+        if (! $profile) {
+            session()->flash('error', 'Profile not found.');
+
+            return;
+        }
+
+        // Check permission (admin or profile owner)
+        if (! $this->canReview($profile)) {
+            session()->flash('error', 'You do not have permission to resend webhook for this profile.');
+
+            return;
+        }
+
+        // Only allow resend for final statuses
+        if (! in_array($profile->status, [KycStatuseEnum::APPROVED, KycStatuseEnum::REJECTED])) {
+            session()->flash('error', 'Webhook can only be resent for approved or rejected profiles.');
+
+            return;
+        }
+
+        SendKycWebhookJob::dispatch($profile->id);
+
+        session()->flash('success', 'Webhook notification queued for resend.');
     }
 
     public function updatingSearch(): void
