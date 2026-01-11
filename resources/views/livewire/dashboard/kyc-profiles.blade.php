@@ -54,19 +54,17 @@
             </div>
 
             <!-- Awaiting Review Filter -->
-            @if ($isAdmin)
-                <div class="form-control mt-4">
-                    <label class="label cursor-pointer justify-start gap-4">
-                        <input type="checkbox" wire:model.live="awaitingReviewFilter" class="checkbox checkbox-primary" />
-                        <span class="label-text">
-                            Awaiting Review Only
-                            @if ($awaitingReviewCount > 0)
-                                <span class="badge badge-primary badge-sm ml-2">{{ $awaitingReviewCount }}</span>
-                            @endif
-                        </span>
-                    </label>
-                </div>
-            @endif
+            <div class="form-control mt-4">
+                <label class="label cursor-pointer justify-start gap-4">
+                    <input type="checkbox" wire:model.live="awaitingReviewFilter" class="checkbox checkbox-primary" />
+                    <span class="label-text">
+                        Awaiting Review Only
+                        @if ($awaitingReviewCount > 0)
+                            <span class="badge badge-primary badge-sm ml-2">{{ $awaitingReviewCount }}</span>
+                        @endif
+                    </span>
+                </label>
+            </div>
 
             @if ($search || $statusFilter || $providerFilter || $awaitingReviewFilter)
                 <div class="mt-4">
@@ -156,7 +154,7 @@
                                 >
                                     View
                                 </button>
-                                @if ($isAdmin && $profile->isAwaitingReview())
+                                @if ($profile->isAwaitingReview() && ($isAdmin || $profile->user_id === auth()->id()))
                                     <button
                                         wire:click="openReviewModal('{{ $profile->id }}', 'approve')"
                                         class="btn btn-success btn-xs"

@@ -47,6 +47,19 @@ class KycProfiles extends Component
     }
 
     /**
+     * Check if current user can review a specific profile.
+     * Admin can review any profile. Non-admin can only review their own.
+     */
+    public function canReview(KYCProfile $profile): bool
+    {
+        if ($this->isAdmin) {
+            return true;
+        }
+
+        return $profile->user_id === auth()->id();
+    }
+
+    /**
      * Open the review modal for a specific profile.
      */
     public function openReviewModal(string $profileId, string $action): void
@@ -114,13 +127,6 @@ class KycProfiles extends Component
      */
     public function submitReview(): void
     {
-        if (! $this->isAdmin) {
-            session()->flash('error', 'Only admins can perform reviews.');
-            $this->closeReviewModal();
-
-            return;
-        }
-
         $this->validate([
             'reviewNotes' => ['required', 'string', 'min:10', 'max:1000'],
         ], [
@@ -133,6 +139,14 @@ class KycProfiles extends Component
 
         if (! $profile) {
             session()->flash('error', 'Profile not found.');
+            $this->closeReviewModal();
+
+            return;
+        }
+
+        // Check review permission (admin or profile owner)
+        if (! $this->canReview($profile)) {
+            session()->flash('error', 'You do not have permission to review this profile.');
             $this->closeReviewModal();
 
             return;
