@@ -134,5 +134,6 @@ return [
     ],
     'mexar' => [
         'url' => env('MEXAR_URL'),
+        'webhook_platform_slug' => env('MEXAR_WEBHOOK_PLATFORM_SLUG', 'kyc-msa'),
     ],
 ];
