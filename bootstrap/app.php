@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'kyc',
             'liveness',
             'djkyb',
+            'djkyc',
         ]);
 
         $middleware->alias([
