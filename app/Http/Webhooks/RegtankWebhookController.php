@@ -3,19 +3,15 @@
 namespace App\Http\Webhooks;
 
 use App\DTO\Webhooks\KycDTO;
-use App\DTOs\Webhooks\DjkybDTO;
-use App\Enums\KycServiceTypeEnum;
 use App\Enums\KycStatuseEnum;
 use App\Enums\WebhookTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendKycWebhookJob;
-use App\Models\CompanyKyb;
 use App\Models\KYCProfile;
 use App\Models\WebhookLog;
 use App\Services\EFormAppService;
 use App\Services\KYC\KycWorkflowService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -28,9 +24,20 @@ class RegtankWebhookController extends Controller
 
     public function kyc(): JsonResponse
     {
+        return $this->processKycWebhook(WebhookTypeEnum::KYC);
+    }
+
+    public function djkyc(): JsonResponse
+    {
+        return $this->processKycWebhook(WebhookTypeEnum::DJKYC);
+    }
+
+    private function processKycWebhook(WebhookTypeEnum $webhookType): JsonResponse
+    {
         $data = request()->all();
         $dto = KycDTO::make($data);
-        WebhookLog::saveRequest(WebhookLog::REGTANK, WebhookTypeEnum::KYC, $data);
+        WebhookLog::saveRequest(WebhookLog::REGTANK, $webhookType, $data);
+
         $profile = KYCProfile::query()
             ->with(['apiKey', 'user'])
             ->where('provider_reference_id', $dto->requestId)
@@ -81,7 +88,7 @@ class RegtankWebhookController extends Controller
 
         try {
             $this->EFormAppService->sendDjkyb($data);
-        }catch (Throwable $e) {
+        } catch (Throwable $e) {
             logger()->error('CompanyKyb not found', ['request_id' => $data['requestId']]);
         }
 
@@ -95,7 +102,7 @@ class RegtankWebhookController extends Controller
 
         try {
             $this->EFormAppService->sendLiveness($data);
-        }catch (Throwable $e) {
+        } catch (Throwable $e) {
             logger()->error('CompanyKyb not found', ['request_id' => $data['requestId']]);
         }
 
