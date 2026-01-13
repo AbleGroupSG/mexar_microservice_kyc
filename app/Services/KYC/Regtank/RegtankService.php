@@ -14,7 +14,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Psr\Log\NullLogger;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
@@ -33,10 +32,11 @@ final class RegtankService implements KYCServiceInterface
      * request to RegTank. Returns profile UUID while RegTank processes the request
      * and sends results via webhook.
      *
-     * @param UserDataDTO $userDataDTO User data including personal info and identification
-     * @param User $user The authenticated user
-     * @param UserApiKey $userApiKey The API key used for this request
+     * @param  UserDataDTO  $userDataDTO  User data including personal info and identification
+     * @param  User  $user  The authenticated user
+     * @param  UserApiKey  $userApiKey  The API key used for this request
      * @return array Array containing 'identity' key with profile UUID
+     *
      * @throws ConnectionException If connection to RegTank fails
      * @throws HttpException If RegTank returns error response
      * @throws Throwable For other unexpected errors
@@ -50,8 +50,22 @@ final class RegtankService implements KYCServiceInterface
 
         $response = Http::withToken($accessToken)
             ->post("$url/v2/djkyc/exchange/input", $data);
-        logger()->debug('Regtank DJKYC Response: ' . json_encode($response->json()));
-        $profile->provider_reference_id = $response->json()['requestId'] ?? null;
+        logger()->debug('Regtank DJKYC Response: '.$response->body());
+
+        // Parse provider reference ID - handle both JSON and plain text responses
+        $responseBody = $response->body();
+        $responseJson = $response->json();
+
+        if ($responseJson && isset($responseJson['requestId'])) {
+            // Documented JSON format: {"requestId": "DJKYC00001"}
+            $profile->provider_reference_id = $responseJson['requestId'];
+        } else {
+            // Fallback: response is plain text DJKYC ID
+            $plainId = trim($responseBody);
+            if (! empty($plainId) && str_starts_with($plainId, 'DJKYC')) {
+                $profile->provider_reference_id = $plainId;
+            }
+        }
         $profile->save();
 
         ApiRequestLog::saveRequest(
@@ -62,7 +76,7 @@ final class RegtankService implements KYCServiceInterface
         );
 
         $responseData = $response->json() ?? [];
-        if(!$response->successful()) {
+        if (! $response->successful()) {
 
             Log::error('Unsuccessful request', ['response' => $responseData]);
             $error = $responseData['error'] ?? 'An error occurred';
@@ -71,21 +85,21 @@ final class RegtankService implements KYCServiceInterface
         }
 
         return [
-            'identity' => $profile->id
+            'identity' => $profile->id,
         ];
     }
 
     /**
      * Create a new KYC profile with PENDING status.
      *
-     * @param UserDataDTO $userDataDTO User data to store in profile
-     * @param User $user The authenticated user
-     * @param UserApiKey $userApiKey The API key used for this request
+     * @param  UserDataDTO  $userDataDTO  User data to store in profile
+     * @param  User  $user  The authenticated user
+     * @param  UserApiKey  $userApiKey  The API key used for this request
      * @return KYCProfile Created profile instance
      */
     private function createProfile(UserDataDTO $userDataDTO, User $user, UserApiKey $userApiKey): KYCProfile
     {
-        $profile = new KYCProfile();
+        $profile = new KYCProfile;
         $profile->id = $userDataDTO->uuid;
         $profile->profile_data = $userDataDTO->toJson();
         $profile->provider = $userDataDTO->meta->service_provider;
@@ -104,10 +118,10 @@ final class RegtankService implements KYCServiceInterface
      * address, nationality, and other screening parameters. Date of birth is
      * split into day, month, and year components.
      *
-     * @param UserDataDTO $userDataDTO User data to transform
+     * @param  UserDataDTO  $userDataDTO  User data to transform
      * @return array Formatted data for RegTank Dow Jones API
      */
-    private function prepareData(UserDataDTO $userDataDTO):array
+    private function prepareData(UserDataDTO $userDataDTO): array
     {
         $dateOfBirth = $userDataDTO->personal_info->date_of_birth
             ? Carbon::parse($userDataDTO->personal_info->date_of_birth)
@@ -116,8 +130,9 @@ final class RegtankService implements KYCServiceInterface
         [$address1, $address2] = $this->prepareAddress($userDataDTO);
 
         $assignee = config('regtank.assignee');
+
         return [
-            'name' => $userDataDTO->personal_info->first_name . ' ' . $userDataDTO->personal_info->last_name,
+            'name' => $userDataDTO->personal_info->first_name.' '.$userDataDTO->personal_info->last_name,
             'profileNotes' => true,
             'referenceId' => $userDataDTO->meta->reference_id,
             'occupationTitle' => true,
@@ -147,7 +162,7 @@ final class RegtankService implements KYCServiceInterface
      * and splits into address1 (first 255 chars) and address2 (overflow) as required
      * by RegTank API format.
      *
-     * @param UserDataDTO $userDataDTO User data containing address information
+     * @param  UserDataDTO  $userDataDTO  User data containing address information
      * @return array Array containing [address1, address2] strings
      */
     private function prepareAddress(UserDataDTO $userDataDTO): array
@@ -169,6 +184,7 @@ final class RegtankService implements KYCServiceInterface
         $address1 = Str::limit($fullAddress, 255, '');
 
         $address2 = strlen($fullAddress) > 255 ? substr($fullAddress, 255) : '';
+
         return [$address1, $address2];
     }
 }
