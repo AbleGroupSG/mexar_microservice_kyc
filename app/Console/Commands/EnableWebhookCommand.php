@@ -34,7 +34,14 @@ class EnableWebhookCommand extends Command
 
         $res=  Http::withToken($accessToken)
             ->post("$url/alert/preferences", $data);
-            
+
+        logger()->warning('Register RegTank webhook', [
+            'specific_server_url' => $url,
+            'webhook_url'   =>  url('/'),
+            'webhook_enabled' => $isEnabled,
+            'status_code'   => $res->getStatusCode(),
+            'response'  =>  $res->getBody()->getContents()
+        ]);
 
         if( $res->status() === 200) {
             $this->info('Webhook enabled successfully');
