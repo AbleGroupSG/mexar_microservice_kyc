@@ -340,8 +340,8 @@ class SendKycWebhookJobTest extends TestCase
         $job = new SendKycWebhookJob($profile->id);
         $job->handle();
 
-        // Verify attempt number is logged
-        Log::shouldHaveReceived('info')
+        // Verify attempt number is logged (job uses logger()->debug())
+        Log::shouldHaveReceived('debug')
             ->with('SendKycWebhook: Sending webhook', \Mockery::on(function ($context) {
                 return isset($context['attempt']);
             }));

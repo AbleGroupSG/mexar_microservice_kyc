@@ -36,7 +36,12 @@ class RegtankWebhookController extends Controller
     {
         $data = request()->all();
         $dto = KycDTO::make($data);
-        WebhookLog::saveRequest(WebhookLog::REGTANK, $webhookType, $data);
+
+        $log = WebhookLog::saveRequestOnce(WebhookLog::REGTANK, $webhookType, $dto->requestId, $data);
+
+        if (! $log) {
+            return response()->json(['status' => true], Response::HTTP_OK);
+        }
 
         $profile = KYCProfile::query()
             ->with(['apiKey', 'user'])
@@ -84,7 +89,12 @@ class RegtankWebhookController extends Controller
     public function djkyb(): JsonResponse
     {
         $data = request()->all();
-        WebhookLog::saveRequest(WebhookLog::REGTANK, WebhookTypeEnum::fromString('djkyb'), $data);
+
+        $log = WebhookLog::saveRequestOnce(WebhookLog::REGTANK, WebhookTypeEnum::fromString('djkyb'), $data['requestId'], $data);
+
+        if (! $log) {
+            return response()->json(['status' => true], Response::HTTP_OK);
+        }
 
         try {
             $this->EFormAppService->sendDjkyb($data);
@@ -98,7 +108,12 @@ class RegtankWebhookController extends Controller
     public function liveness(): JsonResponse
     {
         $data = request()->all();
-        WebhookLog::saveRequest(WebhookLog::REGTANK, WebhookTypeEnum::fromString('liveness'), $data);
+
+        $log = WebhookLog::saveRequestOnce(WebhookLog::REGTANK, WebhookTypeEnum::fromString('liveness'), $data['requestId'], $data);
+
+        if (! $log) {
+            return response()->json(['status' => true], Response::HTTP_OK);
+        }
 
         try {
             $this->EFormAppService->sendLiveness($data);
