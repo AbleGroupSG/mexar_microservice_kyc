@@ -29,5 +29,6 @@ yarn-error.log
 /.vscode
 /.zed
 .scribe
+.secrets
 
 .DS_Store
