@@ -179,6 +179,9 @@ class SendKycWebhookJob implements ShouldQueue
         // Extract review data if present (from manual review workflow)
         $reviewData = $this->additionalData['review_data'] ?? null;
 
+        // Extract reason if present
+        $reason = $this->additionalData['reason'] ?? null;
+
         // Determine timestamps based on status
         $verifiedAt = $profile->status === KycStatuseEnum::APPROVED
             ? $this->getTimestamp($profile, $providerData)
@@ -220,6 +223,7 @@ class SendKycWebhookJob implements ShouldQueue
                 'message' => $message,
                 'review_notes' => $reviewNotes,
                 'failure_reason' => $failureReason,
+                'reason' => $reason,
                 // Manual review fields
                 'reviewed_by' => $reviewData['reviewed_by'] ?? $profile->reviewer?->name,
                 'reviewed_at' => $reviewData['reviewed_at'] ?? $profile->reviewed_at?->toIso8601String(),

@@ -77,7 +77,10 @@ class GlairAIVerificationJob implements ShouldQueue
 
             // Only dispatch webhook if not awaiting manual review
             if ($workflowService->shouldDispatchWebhook($profile)) {
-                SendKycWebhookJob::dispatch($profile->id);
+                SendKycWebhookJob::dispatch(
+                    profileId:$profile->id, 
+                    additionalData: [ 'reason' => $response['reason'] ?? 'No reason provided' ]
+                );
             }
 
         } catch (Exception $e) {
