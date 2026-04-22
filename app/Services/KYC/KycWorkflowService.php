@@ -47,8 +47,9 @@ class KycWorkflowService
         }
 
         // If awaiting review (PROVIDER_* status), don't dispatch yet
+        // Awaiting review status should also dispatch webhook, for BO to view
         if ($profile->isAwaitingReview()) {
-            return false;
+            return true;
         }
 
         // Final status reached (either after manual review or for non-reviewable statuses)
