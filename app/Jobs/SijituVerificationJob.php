@@ -7,10 +7,10 @@ use App\Enums\KycStatuseEnum;
 use App\Models\KYCProfile;
 use App\Services\KYC\KycWorkflowService;
 use App\Services\KYC\Sijitu\SijituService;
-use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SijituVerificationJob implements ShouldQueue
 {
@@ -40,6 +40,13 @@ class SijituVerificationJob implements ShouldQueue
         }
 
         try {
+            Log::info('Sijitu verification started', [
+                'profile_id' => $this->profileId,
+                'provider' => $profile->provider,
+                'status' => $profile->status?->value,
+                'request' => $this->sanitizeForLogs($this->data),
+            ]);
+
             $service = new SijituService();
             $workflowService = app(KycWorkflowService::class);
 
@@ -67,10 +74,15 @@ class SijituVerificationJob implements ShouldQueue
                     additionalData: $additionalData,
                 );
             }
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::error('Sijitu verification failed', [
                 'profile_id' => $this->profileId,
+                'exception_class' => $e::class,
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $this->truncateText($e->getTraceAsString(), 12000),
+                'request' => $this->sanitizeForLogs($this->data),
             ]);
 
             $workflowService = app(KycWorkflowService::class);
@@ -78,6 +90,12 @@ class SijituVerificationJob implements ShouldQueue
             $profile->status = $workflowService->resolveStatus($profile, KycStatuseEnum::ERROR);
             $profile->provider_response_data = [
                 'error' => $e->getMessage(),
+                'exception_class' => $e::class,
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $this->truncateText($e->getTraceAsString(), 12000),
+                'request' => $this->sanitizeForLogs($this->data),
+                'failed_at' => now()->toIso8601String(),
             ];
             $profile->save();
 
@@ -87,15 +105,19 @@ class SijituVerificationJob implements ShouldQueue
                     additionalData: ['error' => $e->getMessage()],
                 );
             }
+
+            return;
         }
     }
 
-    public function failed(\Throwable $exception): void
+    public function failed(Throwable $exception): void
     {
         Log::error('Sijitu verification job permanently failed', [
             'profile_id' => $this->profileId,
+            'exception_class' => $exception::class,
             'error' => $exception->getMessage(),
-            'trace' => $exception->getTraceAsString(),
+            'trace' => $this->truncateText($exception->getTraceAsString(), 12000),
+            'request' => $this->sanitizeForLogs($this->data),
         ]);
 
         $profile = KYCProfile::query()
@@ -114,6 +136,11 @@ class SijituVerificationJob implements ShouldQueue
         $profile->status = $workflowService->resolveStatus($profile, KycStatuseEnum::ERROR);
         $profile->provider_response_data = [
             'error' => $exception->getMessage(),
+            'exception_class' => $exception::class,
+            'file' => $exception->getFile(),
+            'line' => $exception->getLine(),
+            'trace' => $this->truncateText($exception->getTraceAsString(), 12000),
+            'request' => $this->sanitizeForLogs($this->data),
             'failed_at' => now()->toIso8601String(),
             'attempts' => $this->attempts(),
         ];
@@ -127,5 +154,51 @@ class SijituVerificationJob implements ShouldQueue
                 ]
             );
         }
+    }
+
+    private function sanitizeForLogs(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            $sanitized = [];
+            foreach ($value as $key => $item) {
+                $sanitized[$key] = $this->sanitizeForLogs($item);
+            }
+
+            return $sanitized;
+        }
+
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        if (! str_starts_with($value, 'data:image/')) {
+            return $this->truncateText($value, 1000);
+        }
+
+        $parts = explode(',', $value, 2);
+        if (count($parts) !== 2) {
+            return $this->truncateText($value, 1000);
+        }
+
+        [$meta, $base64] = $parts;
+
+        return sprintf(
+            '%s,%s...[truncated %d chars]',
+            $meta,
+            substr($base64, 0, 64),
+            max(strlen($base64) - 64, 0)
+        );
+    }
+
+    private function truncateText(?string $text, int $limit): ?string
+    {
+        if ($text === null || strlen($text) <= $limit) {
+            return $text;
+        }
+
+        $suffix = sprintf('...[truncated %d chars]', strlen($text) - $limit);
+        $sliceLength = max($limit - strlen($suffix), 0);
+
+        return substr($text, 0, $sliceLength) . $suffix;
     }
 }
