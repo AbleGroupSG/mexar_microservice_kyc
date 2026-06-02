@@ -38,8 +38,8 @@ class ApiRequestLog extends Model
         $sanitizedPayload = self::sanitizeForStorage($data);
         $sanitizedResponse = self::sanitizeForStorage($response);
 
-        $payloadJson = self::toJson(self::truncateLargeBase64($sanitizedPayload));
-        $responseJson = self::toJson(self::truncateLargeBase64($sanitizedResponse));
+        $payloadJson = self::encodeForStorage(self::truncateLargeBase64($sanitizedPayload));
+        $responseJson = self::encodeForStorage(self::truncateLargeBase64($sanitizedResponse));
 
         self::query()->create([
             'request_uuid' => $request_uuid,
@@ -107,7 +107,7 @@ class ApiRequestLog extends Model
         );
     }
 
-    private static function toJson(mixed $value): ?string
+    private static function encodeForStorage(mixed $value): ?string
     {
         if ($value === null) {
             return null;
