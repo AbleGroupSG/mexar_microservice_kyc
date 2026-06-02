@@ -54,6 +54,7 @@ class SijituAsyncFlowTest extends TestCase
             ],
             'contact' => [
                 'email' => 'poc_sijitu_appui_03@outlook.com',
+                'phone' => '6281234567890',
             ],
             'documents' => [
                 'photo_selfie' => 'data:image/jpeg;base64,' . base64_encode('fake-selfie'),
@@ -208,6 +209,7 @@ class SijituAsyncFlowTest extends TestCase
             'sender_id' => config('sijitu.sender_id'),
             'user_id' => config('sijitu.user_id'),
             'email' => $payload['contact']['email'],
+            'phone_number' => $payload['contact']['phone'],
             'organization_id' => config('sijitu.organization_id'),
             'nama_lengkap' => 'Yobi Setiawan',
             'nomor_identitas' => $payload['identification']['id_number'],

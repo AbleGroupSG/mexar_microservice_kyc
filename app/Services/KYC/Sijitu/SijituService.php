@@ -105,11 +105,12 @@ class SijituService implements KYCServiceInterface
             'sender_id' => (string) config('sijitu.sender_id'),
             'user_id' => trim((string) config('sijitu.user_id')),
             'email' => trim((string) ($userDataDTO->contact?->email ?? '')),
+            'phone_number' => $this->normalizePhoneNumber($userDataDTO->contact?->phone),
             'organization_id' => (string) config('sijitu.organization_id'),
             'nama_lengkap' => trim($userDataDTO->personal_info->first_name . ' ' . $userDataDTO->personal_info->last_name),
             'nomor_identitas' => $userDataDTO->identification->id_number,
             'address' => $userDataDTO->address->address_line ?: null,
-            'birth_date' => Carbon::make($userDataDTO->personal_info->date_of_birth)?->format('d-M-Y'),
+            'birth_date' => Carbon::make($userDataDTO->personal_info->date_of_birth)?->format('Y-m-d'),
             'birth_place' => $userDataDTO->personal_info->birth_place,
             'photo_selfie' => $this->normalizePhotoSelfie($userDataDTO->documents?->photo_selfie),
         ];
@@ -123,6 +124,7 @@ class SijituService implements KYCServiceInterface
             'sender_id',
             'user_id',
             'email',
+            'phone_number',
             'organization_id',
             'nama_lengkap',
             'nomor_identitas',
@@ -150,6 +152,24 @@ class SijituService implements KYCServiceInterface
         }
 
         return 'data:image/jpeg;base64,' . $photoSelfie;
+    }
+
+    private function normalizePhoneNumber(?string $phoneNumber): ?string
+    {
+        $phoneNumber = trim((string) $phoneNumber);
+        if ($phoneNumber === '') {
+            return null;
+        }
+
+        if (str_starts_with($phoneNumber, '+62')) {
+            return '0' . substr($phoneNumber, 3);
+        }
+
+        if (str_starts_with($phoneNumber, '62')) {
+            return '0' . substr($phoneNumber, 2);
+        }
+
+        return $phoneNumber;
     }
 
     private function generateSignature(array $data): string
