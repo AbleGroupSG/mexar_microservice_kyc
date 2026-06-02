@@ -38,7 +38,8 @@ class ProviderController extends APIController
      *
      * Available providers:
      * - `regtank`: RegTank KYC/KYB screening via Dow Jones API
-     * - `glair_ai`: GlairAI OCR for Indonesian documents
+     * - `glair`: GlairAI identity verification for Indonesian documents
+     * - `sijitu`: Espay Sijitu biometric verification for KTP
      * - `test`: Mock provider for testing without calling external APIs
      *
      * @param Request $request The incoming HTTP request
@@ -49,7 +50,7 @@ class ProviderController extends APIController
         description: "Retrieve all available KYC service providers"
     )]
     #[Response(
-        content: '{"meta": {"code": 200, "message": "Success", "request_id": "uuid"}, "data": ["regtank", "glair_ai", "test"]}',
+        content: '{"meta": {"code": 200, "message": "Success", "request_id": "uuid"}, "data": ["regtank", "glair", "sijitu", "test"]}',
         status: 200,
         description: "Successful response with provider list"
     )]

@@ -11,8 +11,8 @@ class UserDataDTO extends Data
         public PersonalInfoData $personal_info,
         public IdentificationData $identification,
         public AddressData $address,
-        public ?ContactData $contact,
-//        public DocumentsData $documents,
         public MetaData $meta,
+        public ?ContactData $contact = null,
+        public ?DocumentsData $documents = null,
     ) {}
 }

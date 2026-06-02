@@ -28,6 +28,7 @@ class ScreenRequest extends FormRequest
             'personal_info.last_name' => ['required', 'string'],
             'personal_info.gender' => ['sometimes', 'string', 'in:Male,Female,Unspecified'],
             'personal_info.date_of_birth' => ['nullable', 'date', 'date_format:Y-m-d'],
+            'personal_info.birth_place' => ['nullable', 'string', 'max:255'],
             'personal_info.nationality' => ['required', 'string', 'size:2'], //cca2,id,sg
 
             'identification' => ['required', 'array'],
@@ -49,11 +50,8 @@ class ScreenRequest extends FormRequest
             'contact.email' => ['nullable', 'email'],
             'contact.phone' => ['nullable', 'string'],
 
-            // 'documents' => ['required', 'array'],
-            // 'documents.id_front' => ['required', 'string'],
-            // 'documents.id_back' => ['required', 'string'],
-            // 'documents.passport' => ['required', 'string'],
-            // 'documents.utility_bill' => ['required', 'string'],
+            'documents' => ['nullable', 'array'],
+            'documents.photo_selfie' => ['nullable', 'string'],
 
             'meta' => ['required', 'array'],
             'meta.service_provider' => ['required', 'in:' . implode(',', KycServiceTypeEnum::values())],
@@ -61,5 +59,20 @@ class ScreenRequest extends FormRequest
             'meta.status' => ['nullable', Rule::enum(KycStatuseEnum::class)],
             'meta.test' => ['nullable', 'boolean'],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->sometimes('personal_info.birth_place', ['required'], function ($input) {
+            return ($input->meta['service_provider'] ?? null) === KycServiceTypeEnum::SIJITU->value;
+        });
+
+        $validator->sometimes('documents.photo_selfie', ['required'], function ($input) {
+            return ($input->meta['service_provider'] ?? null) === KycServiceTypeEnum::SIJITU->value;
+        });
+
+        $validator->sometimes('contact.email', ['required'], function ($input) {
+            return ($input->meta['service_provider'] ?? null) === KycServiceTypeEnum::SIJITU->value;
+        });
     }
 }

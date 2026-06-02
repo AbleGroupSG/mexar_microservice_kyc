@@ -5,6 +5,7 @@ namespace App\Services\KYC;
 use App\Enums\KycServiceTypeEnum;
 use App\Services\KYC\GlairAI\GlairAIService;
 use App\Services\KYC\Regtank\RegtankService;
+use App\Services\KYC\Sijitu\SijituService;
 use App\Services\KYC\Test\TestService;
 
 class KYCServiceFactory
@@ -20,6 +21,7 @@ class KYCServiceFactory
         return match($type) {
             KycServiceTypeEnum::REGTANK => app(RegtankService::class),
             KycServiceTypeEnum::GLAIR_AI => app(GlairAIService::class),
+            KycServiceTypeEnum::SIJITU => app(SijituService::class),
             KycServiceTypeEnum::TEST => app(TestService::class),
         };
     }

@@ -8,6 +8,8 @@ enum KycServiceTypeEnum: string
 
     case GLAIR_AI = "glair";
 
+    case SIJITU = "sijitu";
+
     case TEST = "test";
 
     public static function getValues(): array
@@ -15,6 +17,7 @@ enum KycServiceTypeEnum: string
         return [
             self::REGTANK,
             self::GLAIR_AI,
+            self::SIJITU,
             self::TEST,
         ];
     }
