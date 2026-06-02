@@ -27,6 +27,7 @@ class SijituAsyncFlowTest extends TestCase
         config()->set('sijitu.username', 'sjtpoc0003-sijitu');
         config()->set('sijitu.password', 'secret-password');
         config()->set('sijitu.sender_id', 'SJTPOC0003');
+        config()->set('sijitu.user_id', 'poc_sijitu_appui_03@outlook.com');
         config()->set('sijitu.organization_id', 'ORG0003');
         config()->set('sijitu.signature_key', '78nCDmceDx4sy74p');
     }
@@ -117,7 +118,7 @@ class SijituAsyncFlowTest extends TestCase
                 '##%s##%s##%s##%s##%s##%s##',
                 $payload['rq_uuid'],
                 $payload['sender_id'],
-                $payload['user_id'],
+                config('sijitu.user_id'),
                 $payload['nomor_identitas'],
                 'BIOMETRIC',
                 config('sijitu.signature_key')
@@ -205,7 +206,8 @@ class SijituAsyncFlowTest extends TestCase
             'rq_uuid' => $uuid,
             'rq_datetime' => now()->format('Y-m-d H:i:s'),
             'sender_id' => config('sijitu.sender_id'),
-            'user_id' => $payload['contact']['email'],
+            'user_id' => config('sijitu.user_id'),
+            'email' => $payload['contact']['email'],
             'organization_id' => config('sijitu.organization_id'),
             'nama_lengkap' => 'Yobi Setiawan',
             'nomor_identitas' => $payload['identification']['id_number'],
